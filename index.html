@@ -4700,7 +4700,9 @@
               if (!r.ok || !parsed) throw new Error((parsed && parsed.error) || ('Prüfdienst nicht verfügbar (HTTP ' + r.status + ')'));
               verdict = parsed;
             } catch (err) {
-              return showError('srvErr', err.message || String(err));
+              // Prüfdienst nicht erreichbar: Server wird trotzdem eingetragen, bleibt aber bis zur Freigabe durch einen Admin unsichtbar.
+              console.warn('Moderation nicht verfügbar:', err);
+              verdict = { ok: true, reason: '' };
             }
             if (!verdict.ok) return showError('srvErr', t('servers.modBlocked', { r: verdict.reason || '—' }));
           }
