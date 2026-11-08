@@ -386,7 +386,23 @@
   @media (prefers-reduced-motion:reduce){
     .modcard,.btn,.chip,.navlinks a,.page,.logo-wrap{transition:none!important;animation:none!important}
   }
+
+  /* ===== Chat & VirusTotal-Box ===== */
+  .chat-block{margin-top:18px}
+  .chat-list{display:grid;gap:10px;max-height:340px;overflow:auto;padding:4px}
+  .chat-msg{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;max-width:88%;animation:fadeUp .35s ease both}
+  .chat-msg.from-admin{margin-left:auto;background:var(--tint-2);border-color:var(--accent)}
+  .chat-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;margin-bottom:4px}
+  .chat-text{white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .chat-form{display:grid;gap:8px;margin-top:12px}
+  .chat-form textarea{width:100%;min-height:80px;padding:10px 12px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--ink);resize:vertical;font:inherit;transition:border-color .25s,box-shadow .25s}
+  .chat-form textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 4px rgba(6,182,212,.15)}
+  .chat-form button{justify-self:end}
+  .vt-box{border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;background:var(--surface-glass)}
+  .vt-box .insp-head{margin-bottom:6px}
+  .review-item{animation:fadeUp .4s ease both}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="blob b1"></div>
@@ -399,6 +415,7 @@
     <a href="#/" data-nav="home" data-i18n="nav.home">Entdecken</a>
     <a href="#/modpacks" data-nav="modpacks" data-i18n="nav.modpacks">Modpacks</a>
     <a href="#/upload" data-nav="upload" data-i18n="nav.upload">Hochladen</a>
+    <a href="#/reviews" data-nav="reviews" data-i18n="nav.reviews" class="hidden">Verifizierung</a>
     <a href="#/admin" data-nav="admin" data-i18n="nav.admin" class="hidden">Admin</a>
   </nav>
   <div class="spacer"></div>
@@ -423,7 +440,11 @@
     session: 'lowmods.session.v1', seeded: 'lowmods.seeded.v1', settings: 'lowmods.settings.v1', check: 'lowmods.check.v1'
   };
   const ADMIN_NAME = 'lwt4';
-  const ADMIN_PASSWORD = 'Google ist ein schmarotzer67';
+  const SB_URL = 'https://khxdkndwhmonysqlajdw.supabase.co';
+  const SB_KEY = 'sb_publishable_ByZmwuk-FSaakhiRFZPaAA_f1X66m9D';
+  const sb = window.supabase.createClient(SB_URL, SB_KEY);
+  let currentUid = null;
+  const snapshots = new Map();
   const NAME_RE = /^[A-Za-z0-9_-]{3,16}$/;
   const DAY = 86400000;
   const MAX_FILE = 3 * 1024 * 1024 * 1024; // 3 GiB Obergrenze pro Mod-Datei
@@ -494,6 +515,30 @@
      ===================================================== */
   const I18N = {
     de: {
+      'nav.reviews': "Verifizierung",
+      'reviews.title': "Meine Verifizierungen",
+      'reviews.sub': "Hier siehst du den Status deiner eingereichten Mods, Ablehnungsgründe und den Chat mit dem Admin.",
+      'reviews.inReview': "In Verifizierung",
+      'reviews.total': "Eingereicht gesamt",
+      'reviews.open': "Öffnen & Chat",
+      'reviews.empty': "Du hast noch keine Mods eingereicht.",
+      'chat.title': "Chat mit dem Admin",
+      'chat.empty': "Noch keine Nachrichten.",
+      'chat.placeholder': "Schreib eine Nachricht…",
+      'chat.send': "Senden",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} Nachrichten",
+      'admin.makeAdmin': "Zum Admin machen",
+      'admin.revokeAdmin': "Admin entziehen",
+      'admin.roleChanged': "Rolle von {name} geändert.",
+      'admin.selfRole': "Du kannst deine eigene Admin-Rolle nicht ändern.",
+      'upload.errMax': "Du hast bereits 3 Mods in Verifizierung. Warte, bis eine geprüft ist.",
+      'upload.errDuplicate': "Diese Datei oder dieser Link ist bereits eingereicht (nicht abgelehnt).",
+      'vt.notScanned': "Noch nicht mit VirusTotal geprüft.",
+      'vt.unknown': "Bei VirusTotal noch unbekannt.",
+      'vt.scan': "Mit VirusTotal scannen",
+      'vt.scanning': "VirusTotal wird abgefragt…",
+      'vt.err': "VirusTotal-Abfrage fehlgeschlagen: {e}",
       'cat.cursed': "Verflucht",
       'cat.decoration': "Dekoration",
       'cat.economy': "Wirtschaft",
@@ -587,7 +632,7 @@
       'auth.errEmpty': 'Bitte Name und Passwort eingeben.', 'auth.errNoAccount': 'Dieses Konto gibt es nicht. Registriere dich zuerst.',
       'auth.errWrongPw': 'Falsches Passwort.', 'auth.errTaken': 'Dieser Name ist schon vergeben. Bitte wähle einen anderen.',
       'auth.errNameFormat': 'Der Name muss 3–16 Zeichen lang sein und darf nur Buchstaben, Zahlen, _ und - enthalten.',
-      'auth.errPwLen': 'Das Passwort braucht mindestens 4 Zeichen.', 'auth.errPwMatch': 'Die Passwörter stimmen nicht überein.',
+      'auth.errPwLen': 'Das Passwort braucht mindestens 6 Zeichen.', 'auth.errPwMatch': 'Die Passwörter stimmen nicht überein.',
       'auth.welcomeNew': 'Willkommen bei LowMods, {name}!', 'auth.welcomeBack': 'Willkommen zurück, {name}!',
       'auth.loggedOut': 'Du bist abgemeldet.', 'auth.needLogin': 'Bitte melde dich zuerst an.',
 
@@ -636,7 +681,7 @@
       'profile.since': 'Mitglied seit', 'profile.myMods': 'Meine Mods', 'profile.dl': 'Downloads meiner Mods',
       'profile.newMod': '+ Neue Mod', 'profile.adminMenu': 'Admin-Menü', 'profile.changePw': 'Passwort ändern',
       'profile.oldPw': 'Aktuelles Passwort', 'profile.newPw': 'Neues Passwort', 'profile.savePw': 'Passwort speichern',
-      'profile.errOld': 'Das aktuelle Passwort ist falsch.', 'profile.errNew': 'Das neue Passwort braucht mindestens 4 Zeichen.',
+      'profile.errOld': 'Das aktuelle Passwort ist falsch.', 'profile.errNew': 'Das neue Passwort braucht mindestens 6 Zeichen.',
       'profile.pwChanged': 'Passwort geändert.', 'profile.noMods': 'Noch keine Mods hochgeladen.',
       'profile.shareFirst': 'Jetzt die erste Mod teilen →', 'profile.myPacks': 'Meine Modpacks', 'profile.packsCta': 'Modpacks verwalten →',
       'profile.pendingInfo': '{n} Mod(s) warten noch auf Verifizierung.', 'profile.deleteOwn': 'Löschen',
@@ -686,6 +731,30 @@
       'notfound.title': 'Seite nicht gefunden', 'notfound.link': 'Zur Startseite'
     },
     en: {
+      'nav.reviews': "Review",
+      'reviews.title': "My reviews",
+      'reviews.sub': "Here you see the status of your submitted mods, rejection reasons and the chat with the admin.",
+      'reviews.inReview': "In review",
+      'reviews.total': "Submitted total",
+      'reviews.open': "Open & chat",
+      'reviews.empty': "You haven't submitted any mods yet.",
+      'chat.title': "Chat with the admin",
+      'chat.empty': "No messages yet.",
+      'chat.placeholder': "Write a message…",
+      'chat.send': "Send",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} messages",
+      'admin.makeAdmin': "Make admin",
+      'admin.revokeAdmin': "Remove admin",
+      'admin.roleChanged': "Role of {name} changed.",
+      'admin.selfRole': "You can't change your own admin role.",
+      'upload.errMax': "You already have 3 mods in review. Wait until one is checked.",
+      'upload.errDuplicate': "This file or link has already been submitted (and not rejected).",
+      'vt.notScanned': "Not checked with VirusTotal yet.",
+      'vt.unknown': "VirusTotal doesn't know this file yet.",
+      'vt.scan': "Scan with VirusTotal",
+      'vt.scanning': "Querying VirusTotal…",
+      'vt.err': "VirusTotal query failed: {e}",
       'cat.cursed': "Cursed",
       'cat.decoration': "Decoration",
       'cat.economy': "Economy",
@@ -779,7 +848,7 @@
       'auth.errEmpty': 'Please enter username and password.', 'auth.errNoAccount': 'This account does not exist. Please sign up first.',
       'auth.errWrongPw': 'Wrong password.', 'auth.errTaken': 'This name is already taken. Please choose another one.',
       'auth.errNameFormat': 'The name must be 3–16 characters long and may only contain letters, numbers, _ and -.',
-      'auth.errPwLen': 'The password needs at least 4 characters.', 'auth.errPwMatch': 'The passwords do not match.',
+      'auth.errPwLen': 'The password needs at least 6 characters.', 'auth.errPwMatch': 'The passwords do not match.',
       'auth.welcomeNew': 'Welcome to LowMods, {name}!', 'auth.welcomeBack': 'Welcome back, {name}!',
       'auth.loggedOut': 'You have been logged out.', 'auth.needLogin': 'Please log in first.',
 
@@ -828,7 +897,7 @@
       'profile.since': 'Member since', 'profile.myMods': 'My mods', 'profile.dl': 'Downloads of my mods',
       'profile.newMod': '+ New mod', 'profile.adminMenu': 'Admin menu', 'profile.changePw': 'Change password',
       'profile.oldPw': 'Current password', 'profile.newPw': 'New password', 'profile.savePw': 'Save password',
-      'profile.errOld': 'The current password is wrong.', 'profile.errNew': 'The new password needs at least 4 characters.',
+      'profile.errOld': 'The current password is wrong.', 'profile.errNew': 'The new password needs at least 6 characters.',
       'profile.pwChanged': 'Password changed.', 'profile.noMods': 'No mods uploaded yet.',
       'profile.shareFirst': 'Share your first mod →', 'profile.myPacks': 'My modpacks', 'profile.packsCta': 'Manage modpacks →',
       'profile.pendingInfo': '{n} mod(s) still waiting for verification.', 'profile.deleteOwn': 'Delete',
@@ -878,6 +947,30 @@
       'notfound.title': 'Page not found', 'notfound.link': 'Go to home'
     },
     fr: {
+      'nav.reviews': "Vérification",
+      'reviews.title': "Mes vérifications",
+      'reviews.sub': "Ici tu vois l'état de tes mods envoyés, les motifs de refus et le chat avec l'admin.",
+      'reviews.inReview': "En vérification",
+      'reviews.total': "Total envoyé",
+      'reviews.open': "Ouvrir et discuter",
+      'reviews.empty': "Tu n'as encore envoyé aucun mod.",
+      'chat.title': "Chat avec l'admin",
+      'chat.empty': "Aucun message pour l'instant.",
+      'chat.placeholder': "Écris un message…",
+      'chat.send': "Envoyer",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} messages",
+      'admin.makeAdmin': "Passer admin",
+      'admin.revokeAdmin': "Retirer le rôle admin",
+      'admin.roleChanged': "Rôle de {name} modifié.",
+      'admin.selfRole': "Tu ne peux pas modifier ton propre rôle admin.",
+      'upload.errMax': "Tu as déjà 3 mods en vérification. Attends qu'un d'entre eux soit contrôlé.",
+      'upload.errDuplicate': "Ce fichier ou ce lien a déjà été envoyé (et n'a pas été refusé).",
+      'vt.notScanned': "Pas encore vérifié avec VirusTotal.",
+      'vt.unknown': "VirusTotal ne connaît pas encore ce fichier.",
+      'vt.scan': "Scanner avec VirusTotal",
+      'vt.scanning': "Interrogation de VirusTotal…",
+      'vt.err': "Échec de la requête VirusTotal : {e}",
       'cat.cursed': "Maudit",
       'cat.decoration': "Décoration",
       'cat.economy': "Économie",
@@ -972,6 +1065,30 @@
       'lang.de':'Allemand','lang.en':'Anglais','lang.fr':'Français','lang.es':'Espagnol','lang.pt':'Portugais','lang.pl':'Polonais','lang.tr':'Turc','lang.nl':'Néerlandais'
     },
     es: {
+      'nav.reviews': "Verificación",
+      'reviews.title': "Mis verificaciones",
+      'reviews.sub': "Aquí ves el estado de tus mods enviados, los motivos de rechazo y el chat con el admin.",
+      'reviews.inReview': "En verificación",
+      'reviews.total': "Enviados en total",
+      'reviews.open': "Abrir y chatear",
+      'reviews.empty': "Todavía no has enviado mods.",
+      'chat.title': "Chat con el admin",
+      'chat.empty': "Aún no hay mensajes.",
+      'chat.placeholder': "Escribe un mensaje…",
+      'chat.send': "Enviar",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} mensajes",
+      'admin.makeAdmin': "Hacer admin",
+      'admin.revokeAdmin': "Quitar admin",
+      'admin.roleChanged': "Rol de {name} cambiado.",
+      'admin.selfRole': "No puedes cambiar tu propio rol de admin.",
+      'upload.errMax': "Ya tienes 3 mods en verificación. Espera a que se revise uno.",
+      'upload.errDuplicate': "Este archivo o enlace ya fue enviado (y no fue rechazado).",
+      'vt.notScanned': "Aún no comprobado con VirusTotal.",
+      'vt.unknown': "VirusTotal aún no conoce este archivo.",
+      'vt.scan': "Escanear con VirusTotal",
+      'vt.scanning': "Consultando VirusTotal…",
+      'vt.err': "Consulta a VirusTotal fallida: {e}",
       'cat.cursed': "Maldito",
       'cat.decoration': "Decoración",
       'cat.economy': "Economía",
@@ -1066,6 +1183,30 @@
       'lang.de':'Alemán','lang.en':'Inglés','lang.fr':'Francés','lang.es':'Español','lang.pt':'Portugués','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandés'
     },
     pt: {
+      'nav.reviews': "Verificação",
+      'reviews.title': "Minhas verificações",
+      'reviews.sub': "Aqui você vê o status dos seus mods enviados, os motivos de recusa e o chat com o admin.",
+      'reviews.inReview': "Em verificação",
+      'reviews.total': "Total enviado",
+      'reviews.open': "Abrir e conversar",
+      'reviews.empty': "Você ainda não enviou nenhum mod.",
+      'chat.title': "Chat com o admin",
+      'chat.empty': "Ainda não há mensagens.",
+      'chat.placeholder': "Escreva uma mensagem…",
+      'chat.send': "Enviar",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} mensagens",
+      'admin.makeAdmin': "Tornar admin",
+      'admin.revokeAdmin': "Remover admin",
+      'admin.roleChanged': "Função de {name} alterada.",
+      'admin.selfRole': "Você não pode alterar a sua própria função de admin.",
+      'upload.errMax': "Você já tem 3 mods em verificação. Aguarde a análise de um deles.",
+      'upload.errDuplicate': "Este arquivo ou link já foi enviado (e não foi recusado).",
+      'vt.notScanned': "Ainda não verificado no VirusTotal.",
+      'vt.unknown': "O VirusTotal ainda não conhece este arquivo.",
+      'vt.scan': "Escanear com VirusTotal",
+      'vt.scanning': "Consultando o VirusTotal…",
+      'vt.err': "Falha na consulta ao VirusTotal: {e}",
       'cat.cursed': "Amaldiçoado",
       'cat.decoration': "Decoração",
       'cat.economy': "Economia",
@@ -1160,6 +1301,30 @@
       'lang.de':'Alemão','lang.en':'Inglês','lang.fr':'Francês','lang.es':'Espanhol','lang.pt':'Português','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandês'
     },
     pl: {
+      'nav.reviews': "Weryfikacja",
+      'reviews.title': "Moje weryfikacje",
+      'reviews.sub': "Tutaj widzisz status przesłanych modów, powody odrzucenia i czat z adminem.",
+      'reviews.inReview': "W weryfikacji",
+      'reviews.total': "Przesłano łącznie",
+      'reviews.open': "Otwórz i pisz",
+      'reviews.empty': "Nie przesłano jeszcze żadnych modów.",
+      'chat.title': "Czat z adminem",
+      'chat.empty': "Brak wiadomości.",
+      'chat.placeholder': "Napisz wiadomość…",
+      'chat.send': "Wyślij",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} wiadomości",
+      'admin.makeAdmin': "Zrób adminem",
+      'admin.revokeAdmin': "Odbierz rolę admina",
+      'admin.roleChanged': "Zmieniono rolę: {name}.",
+      'admin.selfRole': "Nie możesz zmienić własnej roli admina.",
+      'upload.errMax': "Masz już 3 mody w weryfikacji. Poczekaj, aż któryś zostanie sprawdzony.",
+      'upload.errDuplicate': "Ten plik lub link został już przesłany (i nie został odrzucony).",
+      'vt.notScanned': "Nie sprawdzono jeszcze w VirusTotal.",
+      'vt.unknown': "VirusTotal nie zna jeszcze tego pliku.",
+      'vt.scan': "Skanuj w VirusTotal",
+      'vt.scanning': "Zapytanie do VirusTotal…",
+      'vt.err': "Zapytanie do VirusTotal nie powiodło się: {e}",
       'cat.cursed': "Przeklęte",
       'cat.decoration': "Dekoracja",
       'cat.economy': "Ekonomia",
@@ -1254,6 +1419,30 @@
       'lang.de':'Niemiecki','lang.en':'Angielski','lang.fr':'Francuski','lang.es':'Hiszpański','lang.pt':'Portugalski','lang.pl':'Polski','lang.tr':'Turecki','lang.nl':'Niderlandzki'
     },
     tr: {
+      'nav.reviews': "Doğrulama",
+      'reviews.title': "Doğrulamalarım",
+      'reviews.sub': "Burada gönderdiğin modların durumunu, red nedenlerini ve yöneticiyle sohbeti görürsün.",
+      'reviews.inReview': "Doğrulamada",
+      'reviews.total': "Toplam gönderilen",
+      'reviews.open': "Aç ve sohbet et",
+      'reviews.empty': "Henüz mod göndermedin.",
+      'chat.title': "Yönetici ile sohbet",
+      'chat.empty': "Henüz mesaj yok.",
+      'chat.placeholder': "Bir mesaj yaz…",
+      'chat.send': "Gönder",
+      'chat.adminTag': "Yönetici",
+      'chat.count': "{n} mesaj",
+      'admin.makeAdmin': "Yönetici yap",
+      'admin.revokeAdmin': "Yöneticiliği kaldır",
+      'admin.roleChanged': "{name} rolü değiştirildi.",
+      'admin.selfRole': "Kendi yönetici rolünü değiştiremezsin.",
+      'upload.errMax': "Zaten doğrulamada 3 modun var. Birinin incelenmesini bekle.",
+      'upload.errDuplicate': "Bu dosya veya bağlantı zaten gönderildi (reddedilmedi).",
+      'vt.notScanned': "Henüz VirusTotal ile kontrol edilmedi.",
+      'vt.unknown': "VirusTotal bu dosyayı henüz tanımıyor.",
+      'vt.scan': "VirusTotal ile tara",
+      'vt.scanning': "VirusTotal sorgulanıyor…",
+      'vt.err': "VirusTotal sorgusu başarısız: {e}",
       'cat.cursed': "Lanetli",
       'cat.decoration': "Dekorasyon",
       'cat.economy': "Ekonomi",
@@ -1348,6 +1537,30 @@
       'lang.de':'Almanca','lang.en':'İngilizce','lang.fr':'Fransızca','lang.es':'İspanyolca','lang.pt':'Portekizce','lang.pl':'Lehçe','lang.tr':'Türkçe','lang.nl':'Felemenkçe'
     },
     nl: {
+      'nav.reviews': "Verificatie",
+      'reviews.title': "Mijn verificaties",
+      'reviews.sub': "Hier zie je de status van je ingediende mods, de redenen van afwijzing en de chat met de admin.",
+      'reviews.inReview': "In verificatie",
+      'reviews.total': "Totaal ingediend",
+      'reviews.open': "Openen & chatten",
+      'reviews.empty': "Je hebt nog geen mods ingediend.",
+      'chat.title': "Chat met de admin",
+      'chat.empty': "Nog geen berichten.",
+      'chat.placeholder': "Schrijf een bericht…",
+      'chat.send': "Verzenden",
+      'chat.adminTag': "Admin",
+      'chat.count': "{n} berichten",
+      'admin.makeAdmin': "Admin maken",
+      'admin.revokeAdmin': "Admin intrekken",
+      'admin.roleChanged': "Rol van {name} gewijzigd.",
+      'admin.selfRole': "Je kunt je eigen adminrol niet wijzigen.",
+      'upload.errMax': "Je hebt al 3 mods in verificatie. Wacht tot er een is gecontroleerd.",
+      'upload.errDuplicate': "Dit bestand of deze link is al ingediend (en niet afgewezen).",
+      'vt.notScanned': "Nog niet gecontroleerd met VirusTotal.",
+      'vt.unknown': "VirusTotal kent dit bestand nog niet.",
+      'vt.scan': "Scannen met VirusTotal",
+      'vt.scanning': "VirusTotal wordt bevraagd…",
+      'vt.err': "VirusTotal-aanvraag mislukt: {e}",
       'cat.cursed': "Vervloekt",
       'cat.decoration': "Decoratie",
       'cat.economy': "Economie",
@@ -1473,12 +1686,12 @@
   }
   function locale() { return ({de:'de-DE',en:'en-US',fr:'fr-FR',es:'es-ES',pt:'pt-PT',pl:'pl-PL',tr:'tr-TR',nl:'nl-NL'})[settings.lang] || 'en-US'; }
 
-  let users = read(KEYS.users, []);
-  let mods = read(KEYS.mods, []);
-  let modpacks = read(KEYS.packs, []);
-  function saveUsers() { write(KEYS.users, users); }
-  function saveMods() { write(KEYS.mods, mods); }
-  function savePacks() { write(KEYS.packs, modpacks); }
+  let users = [];
+  let mods = [];
+  let modpacks = [];
+  function saveUsers() {}
+
+  function savePacks() {}
 
   // Alte Daten (frühere Version) ins neue Format bringen
   function migrate() {
@@ -1512,34 +1725,55 @@
   }
 
   /* =====================================================
-     Dateien (IndexedDB) für hochgeladene .jar / .zip
+     Speicher: Mod-Zeilen (Supabase-Tabelle) & Dateien (Storage)
      ===================================================== */
-  let dbPromise = null;
-  function db() {
-    if (!dbPromise) {
-      dbPromise = new Promise((resolve, reject) => {
-        if (!('indexedDB' in window)) return reject(new Error('no indexedDB'));
-        const req = indexedDB.open('lowmods.files.v1', 1);
-        req.onupgradeneeded = () => req.result.createObjectStore('files');
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => { dbPromise = null; reject(req.error); };
-      });
+  function fromRow(r) {
+    return {
+      id: r.id, name: r.name, summary: r.summary, description: r.description || '',
+      category: r.category, loader: r.loader, version: r.version,
+      url: r.url || '', author: r.author_name || '', authorId: r.author_id,
+      status: r.status, rejectReason: r.reject_reason || '', downloads: r.downloads || 0,
+      created: ts(r.created_at), hasFile: !!r.file_path, filePath: r.file_path || null,
+      fileName: r.file_name || '', fileSize: r.file_size || 0,
+      sha256: r.sha256 || null, vt: r.vt || null, chat: []
+    };
+  }
+  function toRow(m, withId) {
+    const row = {
+      name: m.name, summary: m.summary, description: m.description || '',
+      category: m.category, loader: m.loader, version: m.version,
+      url: m.url || null, status: m.status, reject_reason: m.rejectReason || '',
+      downloads: m.downloads || 0, file_path: m.filePath || null,
+      file_name: m.fileName || null, file_size: m.fileSize || null,
+      sha256: m.sha256 || null, vt: m.vt || null
+    };
+    if (withId) row.id = m.id;
+    return row;
+  }
+  // Schreibt nur geänderte Mods zurück (Vergleich mit dem zuletzt geladenen Stand)
+  async function saveMods() {
+    for (const m of mods) {
+      const row = toRow(m);
+      const snap = JSON.stringify(row);
+      if (snapshots.get(m.id) === snap) continue;
+      const { error } = await sb.from('mods').update(row).eq('id', m.id);
+      if (error) { toast(error.message); continue; }
+      snapshots.set(m.id, snap);
     }
-    return dbPromise;
   }
-  async function idbRun(mode, fn) {
-    const d = await db();
-    return new Promise((resolve, reject) => {
-      const tx = d.transaction('files', mode);
-      const req = fn(tx.objectStore('files'));
-      tx.oncomplete = () => resolve(req ? req.result : undefined);
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+  async function putFile(id, file) {
+    const m = findMod(id);
+    const path = m && m.filePath ? m.filePath : id + '/' + safeFileName(file.name);
+    const { error } = await sb.storage.from('mods').upload(path, file);
+    if (error) throw error;
   }
-  const putFile = (id, blob) => idbRun('readwrite', st => st.put(blob, id));
-  const getFile = id => idbRun('readonly', st => st.get(id));
-  const delFile = id => idbRun('readwrite', st => st.delete(id)).catch(() => {});
+  async function getFile(id) {
+    const m = findMod(id);
+    if (!m || !m.filePath) return null;
+    const { data, error } = await sb.storage.from('mods').download(m.filePath);
+    if (error) throw error;
+    return data;
+  }
 
   /* =====================================================
      Hilfsfunktionen
@@ -1567,7 +1801,7 @@
     return `linear-gradient(135deg, hsl(${hue} 85% 50%), hsl(${hue + 25} 90% 38%))`;
   }
   function initial(str) { return esc((String(str || '?').trim().charAt(0) || '?').toUpperCase()); }
-  function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function uid() { return crypto.randomUUID(); }
   function safeFileName(s) { return String(s).replace(/[^\w.\-]+/g, '_').replace(/^_+|_+$/g, '') || 'file'; }
   function catLabel(c) { return t('cat.' + (CATS.includes(c) ? c : 'other')); }
   function opts(arr, labelFn) {
@@ -1611,20 +1845,20 @@
   }
 
   /* =====================================================
-     Konten & Session
+     Konten & Session (Supabase)
      ===================================================== */
-  const isAdmin = u => !!u && u.name.toLowerCase() === ADMIN_NAME;
+  const isAdmin = u => !!u && (u.name.toLowerCase() === ADMIN_NAME || u.role === 'admin');
   function findUser(name) {
     const n = String(name || '').trim().toLowerCase();
     return users.find(u => u.name.toLowerCase() === n) || null;
   }
-  function me() {
-    const s = localStorage.getItem(KEYS.session);
-    return s ? findUser(s) : null;
-  }
-  function login(u) { localStorage.setItem(KEYS.session, u.name); }
-  function logout() {
-    localStorage.removeItem(KEYS.session);
+  function me() { return users.find(u => u.id === currentUid) || null; }
+  function emailFor(name) { return String(name).trim().toLowerCase() + '@lowmods.app'; }
+  function ts(v) { return v ? Date.parse(String(v).replace(/(\.\d{3})\d+/, '$1')) : Date.now(); }
+  async function logout() {
+    await sb.auth.signOut();
+    currentUid = null;
+    await loadAll();
     toast(t('auth.loggedOut'));
     go('#/');
   }
@@ -1632,6 +1866,23 @@
     return statusOf(m) === 'approved' || (!!user && (isAdmin(user) || sameName(user.name, m.author)));
   }
   function findMod(id) { return mods.find(m => m.id === id) || null; }
+
+  async function loadAll() {
+    const uidNow = currentUid;
+    const [p, m, pk] = await Promise.all([
+      sb.from('profiles').select('id,username,role,created_at'),
+      sb.from('mods').select('*').order('created_at', { ascending: false }),
+      uidNow ? sb.from('modpacks').select('*').eq('owner_id', uidNow) : Promise.resolve({ data: [] })
+    ]);
+    users = (p.data || []).map(r => ({ id: r.id, name: r.username, role: r.role, created: ts(r.created_at) }));
+    mods = (m.data || []).map(fromRow);
+    modpacks = (pk.data || []).map(r => ({
+      id: r.id, name: r.name, description: r.description || '', version: r.version, loader: r.loader,
+      mods: r.mod_ids || [], author: (me() || {}).name || '', created: ts(r.created_at)
+    }));
+    snapshots.clear();
+    mods.forEach(x => snapshots.set(x.id, JSON.stringify(toRow(x))));
+  }
 
   /* =====================================================
      Router
@@ -1689,6 +1940,7 @@
       a.classList.toggle('active', on);
     });
     $('[data-nav="admin"]').classList.toggle('hidden', !admin);
+    $('[data-nav="reviews"]').classList.toggle('hidden', !user);
     renderAuthArea(user);
 
     let view;
@@ -1699,6 +1951,9 @@
       case 'register':
         if (user) { go('#/'); return; }
         view = viewAuth(route.name); break;
+      case 'reviews':
+        if (!user) { needLogin('#/reviews'); return; }
+        view = viewReviews(user); break;
       case 'upload':
         if (!user) { needLogin('#/upload'); return; }
         view = viewUpload(); break;
@@ -1719,6 +1974,8 @@
 
     $('#app').innerHTML = `<div class="page">${view.html}</div>`;
     if (view.bind) view.bind();
+    const rt = parseRoute();
+    if (rt.name === 'mod') { const mm = findMod(rt.arg); if (mm) loadChat(mm); }
   }
 
   /* =====================================================
@@ -1911,8 +2168,10 @@
             ${hasMultipleVersions ? `<section data-mod-panel="versions" hidden><div class="version-list">${versionPanel}</div></section>` : ''}
             ${adminBtns}
             ${admin ? `<div class="btnrow"><button class="btn ghost" data-action="inspect" data-id="${esc(m.id)}">${esc(t('insp.inspect'))}</button></div>` : ''}
+          ${chatHtml(m, user)}
           </div>
           <aside class="card side">
+            ${vtBlockHtml(m)}
             ${(st === 'approved' || canDelete) ? `<button class="btn" data-action="download" data-id="${esc(m.id)}" style="width:100%;font-size:1.05rem">${esc(t('mod.download'))}</button>` : ''}
             <p class="hint center" style="margin:10px 0 18px">${esc(hint)}</p>
             <div class="infolist">
@@ -1950,8 +2209,8 @@
       return;
     }
     if (statusOf(m) === 'approved') {
+      await sb.rpc('increment_downloads', { mod: m.id });
       m.downloads = (m.downloads || 0) + 1;
-      saveMods();
     }
     const c = $('#dlCount');
     if (c) c.textContent = fmt(m.downloads);
@@ -1959,11 +2218,36 @@
   }
 
   async function removeMod(id) {
-    mods = mods.filter(m => m.id !== id);
-    modpacks.forEach(p => { p.mods = p.mods.filter(x => x !== id); });
-    saveMods();
-    savePacks();
-    await delFile(id);
+    const m = findMod(id);
+    if (!m) return;
+    if (m.filePath) await sb.storage.from('mods').remove([m.filePath]);
+    const { error } = await sb.from('mods').delete().eq('id', id);
+    if (error) { toast(error.message); return; }
+    mods = mods.filter(x => x.id !== id);
+    snapshots.delete(id);
+    for (const p of modpacks) {
+      if (p.mods.includes(id)) {
+        p.mods = p.mods.filter(x => x !== id);
+        await sb.from('modpacks').update({ mod_ids: p.mods }).eq('id', p.id);
+      }
+    }
+  }
+
+  async function deletePack(p) {
+    const { error } = await sb.from('modpacks').delete().eq('id', p.id);
+    if (error) { toast(error.message); return false; }
+    modpacks = modpacks.filter(x => x.id !== p.id);
+    return true;
+  }
+
+  // Chat einer Mod nachladen (nur Uploader und Admin, nur solange nicht verifiziert)
+  async function loadChat(m) {
+    const user = me();
+    if (!user || !m || statusOf(m) === 'approved' || !(isAdmin(user) || sameName(user.name, m.author))) return;
+    const { data, error } = await sb.from('chat_messages').select('*').eq('mod_id', m.id).order('created_at', { ascending: true });
+    if (error || !data || data.length === (m.chat || []).length) return;
+    m.chat = data.map(r => ({ from: r.author_name, admin: !!r.is_admin, text: r.body, at: ts(r.created_at) }));
+    if (location.hash === '#/mod/' + m.id) render();
   }
 
   /* =====================================================
@@ -2005,33 +2289,39 @@
         </div>`,
       bind() {
         document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
-        $('#authForm').addEventListener('submit', e => {
+        $('#authForm').addEventListener('submit', async e => {
           e.preventDefault();
           const name = $('#a_name').value.trim();
           const pw = $('#a_pw').value;
 
           if (isLogin) {
             if (!name || !pw) return showError('authErr', t('auth.errEmpty'));
-            const u = findUser(name);
-            if (!u) return showError('authErr', t('auth.errNoAccount'));
-            if (u.password !== pw) return showError('authErr', t('auth.errWrongPw'));
-            login(u);
-            toast(t('auth.welcomeBack', { name: u.name }));
+            const { error } = await sb.auth.signInWithPassword({ email: emailFor(name), password: pw });
+            if (error) return showError('authErr', t('auth.errWrongPw'));
+            const { data } = await sb.auth.getUser();
+            currentUid = data.user ? data.user.id : null;
+            await loadAll();
+            toast(t('auth.welcomeBack', { name: me() ? me().name : name }));
             go(afterAuth());
             return;
           }
 
           const pw2 = $('#a_pw2').value;
           if (!NAME_RE.test(name)) return showError('authErr', t('auth.errNameFormat'));
-          if (findUser(name)) return showError('authErr', t('auth.errTaken'));
-          if (pw.length < 4) return showError('authErr', t('auth.errPwLen'));
+          const { data: free, error: freeErr } = await sb.rpc('username_available', { uname: name });
+          if (freeErr) return showError('authErr', freeErr.message);
+          if (!free) return showError('authErr', t('auth.errTaken'));
+          if (pw.length < 6) return showError('authErr', t('auth.errPwLen'));
           if (pw !== pw2) return showError('authErr', t('auth.errPwMatch'));
 
-          const u = { name, password: pw, created: Date.now() };
-          users.push(u);
-          saveUsers();
-          login(u);
-          toast(t('auth.welcomeNew', { name: u.name }));
+          const { error: signErr } = await sb.auth.signUp({ email: emailFor(name), password: pw, options: { data: { username: name } } });
+          if (signErr) return showError('authErr', signErr.message);
+          const { data: sess } = await sb.auth.getSession();
+          if (!sess.session) await sb.auth.signInWithPassword({ email: emailFor(name), password: pw });
+          const { data } = await sb.auth.getUser();
+          currentUid = data.user ? data.user.id : null;
+          await loadAll();
+          toast(t('auth.welcomeNew', { name }));
           go(afterAuth());
         });
       }
@@ -2105,29 +2395,35 @@
           }
 
           const admin = isAdmin(user);
+          let sha = null;
+          if (file && file.size <= HASH_MAX) sha = await sha256Hex(file);
+          const id = uid();
           const mod = {
-            id: uid(), name, summary, description,
+            id, name, summary, description,
             category: $('#f_cat').value, loader: $('#f_loader').value, version: $('#f_ver').value,
             url, author: user.name, downloads: 0, created: Date.now(),
-            status: admin ? 'approved' : 'pending',
-            hasFile: false, fileName: '', fileSize: 0
+            status: admin ? 'approved' : 'pending', rejectReason: '',
+            hasFile: !!file, filePath: file ? id + '/' + safeFileName(file.name) : null,
+            fileName: file ? file.name : '', fileSize: file ? file.size : 0,
+            sha256: sha, vt: null, chat: []
           };
-
+          const { error: insErr } = await sb.from('mods').insert(toRow(mod, true));
+          if (insErr) {
+            if (String(insErr.message).includes('max_review')) return showError('formErr', t('upload.errMax'));
+            if (insErr.code === '23505') return showError('formErr', t('upload.errDuplicate'));
+            return showError('formErr', insErr.message);
+          }
           if (file) {
-            try {
-              await putFile(mod.id, file);
-              mod.hasFile = true;
-              mod.fileName = file.name;
-              mod.fileSize = file.size;
-            } catch (err) {
+            try { await putFile(id, file); }
+            catch (err) {
+              await sb.from('mods').delete().eq('id', id);
               return showError('formErr', t('upload.errStorage'));
             }
           }
-
           mods.unshift(mod);
-          saveMods();
+          snapshots.set(id, JSON.stringify(toRow(mod)));
           toast(admin ? t('upload.submittedAdmin') : t('upload.submittedPending'));
-          go(admin ? '#/mod/' + mod.id : '#/profile');
+          go(admin ? '#/mod/' + id : '#/profile');
         });
       }
     };
@@ -2177,18 +2473,21 @@
       bind() {
         const form = $('#packForm');
         if (!form) return;
-        form.addEventListener('submit', e => {
+        form.addEventListener('submit', async e => {
           e.preventDefault();
           const name = $('#p_name').value.trim();
           const selected = [...document.querySelectorAll('input[name="pick"]:checked')].map(i => i.value);
           if (!name) return showError('packErr', t('modpack.errName'));
           if (!selected.length) return showError('packErr', t('modpack.errMods'));
+          const { data: row, error: pkErr } = await sb.from('modpacks').insert({
+            owner_id: currentUid, name, description: $('#p_desc').value.trim(),
+            version: $('#p_ver').value, loader: $('#p_loader').value, mod_ids: selected
+          }).select().single();
+          if (pkErr) return showError('packErr', pkErr.message);
           modpacks.push({
-            id: uid(), name, description: $('#p_desc').value.trim(),
-            version: $('#p_ver').value, loader: $('#p_loader').value,
-            mods: selected, author: user.name, created: Date.now()
+            id: row.id, name: row.name, description: row.description || '', version: row.version,
+            loader: row.loader, mods: row.mod_ids || selected, author: user.name, created: ts(row.created_at)
           });
-          savePacks();
           toast(t('modpack.created'));
           render();
         });
@@ -2456,14 +2755,15 @@
           : `<div class="card empty">${esc(t('profile.noMods'))}<br><a href="#/upload" style="font-weight:700">${esc(t('profile.shareFirst'))}</a></div>`}`,
       bind() {
         $('#logoutBtn2').addEventListener('click', logout);
-        $('#pwForm').addEventListener('submit', e => {
+        $('#pwForm').addEventListener('submit', async e => {
           e.preventDefault();
           const oldPw = $('#p_old').value;
           const newPw = $('#p_new').value;
-          if (oldPw !== user.password) return showError('pwErr', t('profile.errOld'));
-          if (newPw.length < 4) return showError('pwErr', t('profile.errNew'));
-          user.password = newPw;
-          saveUsers();
+          const { error: loginErr } = await sb.auth.signInWithPassword({ email: emailFor(user.name), password: oldPw });
+          if (loginErr) return showError('pwErr', t('profile.errOld'));
+          if (newPw.length < 6) return showError('pwErr', t('profile.errNew'));
+          const { error } = await sb.auth.updateUser({ password: newPw });
+          if (error) return showError('pwErr', error.message);
           toast(t('profile.pwChanged'));
           render();
         });
@@ -2804,6 +3104,7 @@
           insp.scan = await scanEntries(blob, insp.entries);
           if (!live()) return;
           if (blob.size <= HASH_MAX) insp.sha = await sha256Hex(blob);
+          if (insp.sha && !m.sha256) { m.sha256 = insp.sha; saveMods(); }
         }
       }
     } catch (e) {
@@ -3025,6 +3326,75 @@
       </div>`;
   }
 
+  /* =====================================================
+     Verifizierung: Chat, VirusTotal-Box, eigene Einreichungen
+     ===================================================== */
+  function chatHtml(m, user) {
+    if (!user || statusOf(m) === 'approved') return '';
+    if (!(isAdmin(user) || sameName(user.name, m.author))) return '';
+    const msgs = (m.chat || []).map(c => `
+      <div class="chat-msg ${c.admin ? 'from-admin' : ''}">
+        <div class="chat-meta"><b>${esc(c.from)}</b>${c.admin ? ` <span class="badge admin">${esc(t('chat.adminTag'))}</span>` : ''}
+          <span class="hint">${esc(new Date(c.at).toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }))}</span></div>
+        <div class="chat-text">${esc(c.text)}</div>
+      </div>`).join('');
+    return `
+      <div class="insp-block chat-block">
+        <h3>${esc(t('chat.title'))}</h3>
+        <div class="chat-list">${msgs || `<p class="hint">${esc(t('chat.empty'))}</p>`}</div>
+        <div class="chat-form">
+          <textarea id="chatText" maxlength="1000" placeholder="${esc(t('chat.placeholder'))}"></textarea>
+          <button class="btn small" data-action="chat-send" data-id="${esc(m.id)}">${esc(t('chat.send'))}</button>
+        </div>
+      </div>`;
+  }
+
+  function vtBlockHtml(m) {
+    if (!m.sha256 && !m.url) return '';
+    const r = m.vt;
+    let body = `<p class="hint">${esc(t('vt.notScanned'))}</p>`;
+    if (r && r.unknown) body = `<p class="hint">${esc(t('vt.unknown'))}</p>`;
+    else if (r) body = `<div class="insp-vt-stats"><span class="${r.malicious ? 'mal' : 'ok'}">${esc(t('insp.vtResult', { m: fmt(r.malicious || 0), s: fmt(r.suspicious || 0), h: fmt(r.harmless || 0), u: fmt(r.undetected || 0) }))}</span></div>`;
+    const link = m.sha256 ? `https://www.virustotal.com/gui/file/${m.sha256}` : `https://www.virustotal.com/gui/search/${encodeURIComponent(m.url)}`;
+    return `
+      <div class="vt-box">
+        <div class="insp-head"><b>${esc(t('insp.secVt'))}</b><a class="hint" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(t('insp.vtOpen'))}</a></div>
+        ${body}
+        <button class="btn ghost small" data-action="vt-scan" data-id="${esc(m.id)}" style="width:100%;margin-top:8px">${esc(t('vt.scan'))}</button>
+      </div>`;
+  }
+
+  function viewReviews(user) {
+    const mine = mods.filter(m => sameName(m.author, user.name)).sort((a, b) => (b.created || 0) - (a.created || 0));
+    const inReview = mine.filter(m => statusOf(m) === 'pending').length;
+    const cards = mine.map(m => `
+      <div class="packitem review-item">
+        <div class="modhead" style="gap:12px">
+          <div class="icon" style="width:44px;height:44px;font-size:1.2rem;background:${gradientFor(m.name)}">${initial(m.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="modname">${esc(m.name)}</div>
+            <div class="by">${esc(m.loader)} · MC ${esc(m.version)} · ${esc(catLabel(m.category))}</div>
+          </div>
+          ${statusBadge(m)}
+        </div>
+        ${statusOf(m) === 'rejected' && m.rejectReason ? `<div class="banner rejected">${esc(t('mod.reason', { r: m.rejectReason }))}</div>` : ''}
+        <div class="btnrow" style="margin-top:12px">
+          <a class="btn ghost small" href="#/mod/${esc(m.id)}">${esc(t('reviews.open'))}</a>
+          <span class="hint" style="align-self:center">${esc(t('chat.count', { n: fmt((m.chat || []).length) }))}</span>
+        </div>
+      </div>`).join('');
+    return {
+      html: `
+        <h1 class="title small">${esc(t('reviews.title'))}</h1>
+        <p class="muted" style="margin:4px 0 18px">${esc(t('reviews.sub'))}</p>
+        <div class="grid3" style="margin-bottom:18px">
+          <div class="card kpi"><span>${esc(t('reviews.inReview'))}</span><b>${fmt(inReview)} / 3</b></div>
+          <div class="card kpi"><span>${esc(t('reviews.total'))}</span><b>${fmt(mine.length)}</b></div>
+        </div>
+        <div class="packlist">${cards || `<div class="card empty">${esc(t('reviews.empty'))}</div>`}</div>`
+    };
+  }
+
   let adminTab = 'overview';
   const revealed = new Set(); // Namen (klein), deren Passwort sichtbar ist
 
@@ -3051,7 +3421,7 @@
           <div class="card kpi"><span>${esc(t('admin.kDownloads'))}</span><b>${fmt(dl)}</b></div>
         </div>
         <div class="card" style="margin-top:20px">
-          <p class="muted">${esc(t('admin.hint', { name: ADMIN_NAME }))}</p>
+          
         </div>
         ${checkSettingsCard()}`;
     } else if (adminTab === 'review') {
@@ -3087,21 +3457,21 @@
         return `
           <tr>
             <td><span class="avatar sm" style="background:${gradientFor(u.name)}">${initial(u.name)}</span><b>${esc(u.name)}</b></td>
-            <td><span class="pw">${shown ? esc(u.password) : '•'.repeat(10)}</span>
-                <button class="btn ghost small" data-action="toggle-one" data-user="${esc(key)}">${esc(shown ? t('admin.hide') : t('admin.show'))}</button></td>
+            <td class="hint">—</td>
             <td><span class="badge ${admin ? 'admin' : 'user'}">${esc(admin ? t('role.admin') : t('role.member'))}</span></td>
             <td>${fmt(count)}</td>
             <td class="nowrap">${fmtDate(u.created)}</td>
             <td class="nowrap">
-              <button class="btn ghost small" data-action="pw" data-user="${esc(key)}">${esc(t('admin.changePw'))}</button>
-              ${admin ? '' : `<button class="btn danger small" data-action="del-user" data-user="${esc(key)}">${esc(t('admin.delete'))}</button>`}
+              
+              ${key === ADMIN_NAME ? '' : `<button class="btn ghost small" data-action="toggle-role" data-user="${esc(key)}">${esc(admin ? t('admin.revokeAdmin') : t('admin.makeAdmin'))}</button>`}
+              
             </td>
           </tr>`;
       }).join('');
       body = `
         <div class="toolbar" style="margin-top:0">
           <span class="muted">${esc(t('admin.accounts', { n: fmt(users.length) }))}</span>
-          <button class="btn ghost small" data-action="toggle-all">${esc(allShown ? t('admin.hideAll') : t('admin.showAll'))}</button>
+          
         </div>
         <div class="card tablewrap">
           <table class="table">
@@ -3140,7 +3510,7 @@
   /* =====================================================
      Klick-Aktionen (Delegation auf #app)
      ===================================================== */
-  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models'];
+  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models', 'toggle-role'];
 
   async function onAppClick(e) {
     const tabEl = e.target.closest('[data-tab]');
@@ -3163,6 +3533,53 @@
 
     try {
       switch (act) {
+        case 'toggle-role': {
+          const u = findUser(key);
+          if (!u || u.name.toLowerCase() === ADMIN_NAME) return;
+          if (user && sameName(user.name, u.name)) { toast(t('admin.selfRole')); return; }
+          const newRole = isAdmin(u) ? 'member' : 'admin';
+          const { error } = await sb.rpc('set_role', { target: u.id, new_role: newRole });
+          if (error) { toast(error.message); return; }
+          u.role = newRole;
+          toast(t('admin.roleChanged', { name: u.name }));
+          break;
+        }
+
+        case 'chat-send': {
+          const m = findMod(id);
+          if (!m || !user || statusOf(m) === 'approved') return;
+          if (!(isAdmin(user) || sameName(user.name, m.author))) return;
+          const area = $('#chatText');
+          const text = (area ? area.value : '').trim();
+          if (!text) return;
+          const { error } = await sb.from('chat_messages').insert({ mod_id: m.id, body: text.slice(0, 1000) });
+          if (error) { toast(error.message); return; }
+          m.chat = [];
+          await loadChat(m);
+          break;
+        }
+
+        case 'vt-scan': {
+          const m = findMod(id);
+          if (!m || !(m.sha256 || m.url)) return;
+          if (!(statusOf(m) === 'approved' || admin || (user && sameName(user.name, m.author)))) return;
+          const query = m.sha256 ? 'sha=' + encodeURIComponent(m.sha256) : 'url=' + encodeURIComponent(m.url);
+          toast(t('vt.scanning'));
+          try {
+            const r = await fetch('/.netlify/functions/vt?' + query);
+            const j = await r.json();
+            if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+            m.vt = j.unknown ? { unknown: true, at: Date.now() } : Object.assign({ at: Date.now() }, j.stats);
+            const { error } = await sb.rpc('set_mod_vt', { mod: m.id, data: m.vt });
+            if (error) throw error;
+            snapshots.set(m.id, JSON.stringify(toRow(m)));
+          } catch (e) {
+            toast(t('vt.err', { e: e.message || String(e) }));
+            return;
+          }
+          break;
+        }
+
         case 'inspect':
           await openInspector(id);
           return;
@@ -3265,8 +3682,7 @@
           if (!p || !user) return;
           if (!(sameName(p.author, user.name) || admin)) return;
           if (!confirm(t('modpack.confirmDelete', { name: p.name }))) return;
-          modpacks = modpacks.filter(x => x !== p);
-          savePacks();
+          await deletePack(p);
           toast(t('modpack.deleted'));
           break;
         }
@@ -3321,14 +3737,18 @@
   /* =====================================================
      Start
      ===================================================== */
-  seed();
-  migrate();
   applySettings();
   setupInspector();
   $('#app').addEventListener('click', onAppClick);
   $('#app').addEventListener('change', e => { if (e.target.id === 'ck_prov') onProviderChange(); });
   window.addEventListener('hashchange', () => { window.scrollTo({ top: 0 }); render(); });
   render();
+  (async () => {
+    const { data } = await sb.auth.getSession();
+    currentUid = data.session ? data.session.user.id : null;
+    await loadAll();
+    render();
+  })();
 })();
 </script>
 </body>
