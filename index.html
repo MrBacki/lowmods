@@ -3045,7 +3045,7 @@
       mods: r.mod_ids || [], author: (me() || {}).name || '', created: ts(r.created_at)
     }));
     const am = await sb.from('admin_messages').select('*').order('created_at', { ascending: false });
-    adminMessages = (am.data || []).map(r => ({ id: r.id, from: r.from_name || '', body: r.body, at: ts(r.created_at) }));
+    adminMessages = (am.data || []).map(r => ({ id: r.id, from: r.from_name || '', body: r.body, at: ts(r.created_at), serverId: r.server_id || null }));
     const sv = await sb.from('servers').select('*').order('created_at', { ascending: false });
     servers = (sv.data || []).map(fromServer);
     snapshots.clear();
@@ -3612,7 +3612,7 @@
             try { await putFile(id, file); }
             catch (err) {
               await sb.from('mods').delete().eq('id', id);
-              return showError('formErr', t('upload.errStorage'));
+              return showError('formErr', (err && err.message) ? 'Speicher-Fehler: ' + err.message : t('upload.errStorage'));
             }
           }
           mods.unshift(mod);
@@ -4648,8 +4648,9 @@
         <div class="modhead"><div style="flex:1;min-width:0"><div class="modname">${esc(s.name)}</div><div class="by"><code>${esc(s.address)}</code></div></div>${statusBadge(s)}</div>
         ${s.status === 'approved' && !s.promoted && !s.promoRequested ? `<button class="btn ghost small" style="margin-top:10px" data-action="srv-promo" data-id="${esc(s.id)}">${esc(t('servers.promoAsk'))}</button>` : ''}
         ${s.promoRequested && !s.promoted ? `<p class="hint" style="margin-top:8px">${esc(t('servers.promoSent'))}</p>` : ''}
-      </div>`).join('');
-    const form = user ? `${msgFormHtml()}<div class="card" style="margin-top:18px">
+      ${msgFormHtml(s.id)}
+        </div>`).join('');
+    const form = user ? `<div class="card" style="margin-top:18px">
         <h2 class="sub" style="margin-top:0">${esc(t('servers.add'))}</h2>
         <div class="error" id="srvErr"></div>
         <form id="srvForm" novalidate>
@@ -4674,8 +4675,6 @@
         <div class="grid">${rest.map(serverCard).join('') || `<div class="card empty" style="grid-column:1/-1">${esc(t('servers.empty'))}</div>`}</div>
         ${user ? `<h2 class="sub">${esc(t('servers.mine'))}</h2>${mineHtml || `<p class="hint">${esc(t('servers.none'))}</p>`}${form}` : ''}`,
       bind() {
-        const mf = $('#msgForm');
-        if (mf) mf.addEventListener('submit', sendAdminMessage);
         const f = $('#srvForm');
         if (!f) return;
         f.addEventListener('submit', async e => {
@@ -4695,8 +4694,11 @@
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ text: name + '\n' + address + '\n' + description })
               });
-              verdict = await r.json();
-              if (!r.ok) throw new Error(verdict.error || ('HTTP ' + r.status));
+              const raw = await r.text();
+              let parsed = null;
+              try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+              if (!r.ok || !parsed) throw new Error((parsed && parsed.error) || ('Prüfdienst nicht verfügbar (HTTP ' + r.status + ')'));
+              verdict = parsed;
             } catch (err) {
               return showError('srvErr', err.message || String(err));
             }
@@ -4723,32 +4725,25 @@
   }
 
   /* =====================================================
-     Nachrichten an Admins
+     Nachrichten an Admins (mit Server verknüpft)
      ===================================================== */
-  function msgFormHtml() {
-    return `<div class="card" style="margin-top:18px">
-      <h2 class="sub" style="margin-top:0">${esc(t('servers.msgTitle'))}</h2>
-      <form id="msgForm" novalidate>
-        <div class="field"><textarea id="msgText" maxlength="1000"></textarea></div>
-        <button class="btn ghost" type="submit" style="width:100%">${esc(t('servers.msgSend'))}</button>
-      </form>
+  function msgFormHtml(serverId) {
+    return `<div class="msg-box" style="margin-top:12px">
+      <label for="msg-${esc(serverId)}"><b>${esc(t('servers.msgTitle'))}</b></label>
+      <textarea id="msg-${esc(serverId)}" maxlength="1000" style="width:100%;min-height:80px;margin-top:6px"></textarea>
+      <button class="btn ghost small" data-action="srv-msg" data-id="${esc(serverId)}" style="width:100%;margin-top:8px">${esc(t('servers.msgSend'))}</button>
     </div>`;
-  }
-  async function sendAdminMessage(e) {
-    e.preventDefault();
-    const body = $('#msgText').value.trim();
-    if (!body) return;
-    const { error } = await sb.from('admin_messages').insert({ body: body.slice(0, 1000) });
-    if (error) { toast(error.message); return; }
-    $('#msgText').value = '';
-    toast(t('servers.msgSent'));
   }
   function msgAdminHtml() {
     if (!adminMessages.length) return `<div class="card empty">${esc(t('admin.msgEmpty'))}</div>`;
-    return adminMessages.map(x => `<div class="packitem">
-        <div class="modhead"><div style="flex:1"><b>${esc(x.from)}</b> <span class="hint">${esc(new Date(x.at).toLocaleString(locale()))}</span></div></div>
+    return adminMessages.map(x => {
+      const srv = x.serverId ? servers.find(sv => sv.id === x.serverId) : null;
+      const where = srv ? `${esc(srv.name)} · <code>${esc(srv.address)}</code>` : '—';
+      return `<div class="packitem">
+        <div class="modhead"><div style="flex:1"><b>${esc(x.from)}</b> <span class="hint">${esc(new Date(x.at).toLocaleString(locale()))}</span><div class="hint">${where}</div></div></div>
         <p class="chat-text" style="margin-top:8px">${esc(x.body)}</p>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   let adminTab = 'overview';
@@ -4942,6 +4937,17 @@
           break;
         }
 
+        case 'srv-msg': {
+          const srv = servers.find(x => x.id === id);
+          const area = $('#msg-' + id);
+          const body = (area ? area.value : '').trim();
+          if (!srv || !body) return;
+          const { error } = await sb.from('admin_messages').insert({ body: body.slice(0, 1000), server_id: id });
+          if (error) { toast(error.message); return; }
+          area.value = '';
+          toast(t('servers.msgSent'));
+          return;
+        }
         case 'srv-copy': {
           const srv = servers.find(x => x.id === id);
           if (srv && navigator.clipboard) { await navigator.clipboard.writeText(srv.address); toast(t('servers.copy') + ' ✓'); }
