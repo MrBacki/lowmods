@@ -355,6 +355,37 @@
   .warn{color:#b45309;font-weight:700;font-size:.9rem}
   @media(max-width:700px){.insp-dl{grid-template-columns:1fr}.insp-modal{padding:16px}}
 
+
+  /* ===== Feinschliff: flüssigere Animationen & modernere Formen ===== */
+  .card{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .btn{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .3s,background .3s,filter .3s,color .3s}
+  .btn:hover{filter:brightness(1.06)}
+  .btn:focus-visible,.chip:focus-visible,.navlinks a:focus-visible,.tabs button:focus-visible,.icon-btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px}
+  .chip{transition:transform .25s cubic-bezier(.2,.8,.2,1),background .3s,color .3s,box-shadow .3s,border-color .3s}
+  .chip:hover{transform:translateY(-2px)}
+  .chip:active{transform:scale(.96)}
+  .chips.scroll-x{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 2px 8px;max-width:100%;mask-image:linear-gradient(90deg,#000 92%,transparent)}
+  .chips.scroll-x::-webkit-scrollbar{display:none}
+  .chips.scroll-x .chip{flex-shrink:0;white-space:nowrap}
+  .toolbar{align-items:center}
+  .modcard{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;border:1px solid var(--border)}
+  .modcard:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 44px -16px var(--accent-2)}
+  .navlinks a{transition:background .25s,color .25s,transform .25s cubic-bezier(.2,.8,.2,1)}
+  .navlinks a:hover{transform:translateY(-1px)}
+  .searchbar input{transition:box-shadow .3s,border-color .3s,transform .3s}
+  .searchbar input:focus{transform:translateY(-1px)}
+  .field input,.field textarea,.field select,.select{transition:border-color .25s,box-shadow .25s,background .25s}
+  .field input:hover,.field textarea:hover,.field select:hover,.select:hover{border-color:var(--accent)}
+  select.select,.field select{-webkit-appearance:none;appearance:none;padding-right:40px;background-repeat:no-repeat;background-position:right 14px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+  .table tbody tr{transition:background .25s}
+  .tabs button{transition:background .3s,color .3s,box-shadow .3s,transform .25s}
+  .tabs button:active{transform:scale(.98)}
+  .toast{border-radius:16px}
+  .cat-ico{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:6px;vertical-align:-3px}
+  .cat-ico svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  @media (prefers-reduced-motion:reduce){
+    .modcard,.btn,.chip,.navlinks a,.page,.logo-wrap{transition:none!important;animation:none!important}
+  }
 </style>
 </head>
 <body>
@@ -396,7 +427,7 @@
   const NAME_RE = /^[A-Za-z0-9_-]{3,16}$/;
   const DAY = 86400000;
   const MAX_FILE = 3 * 1024 * 1024 * 1024; // 3 GiB Obergrenze pro Mod-Datei
-  const CATS = ['optimization', 'adventure', 'tech', 'decor', 'tools', 'other'];
+  const CATS = ['adventure', 'cursed', 'decoration', 'economy', 'equipment', 'food', 'game-mechanics', 'library', 'magic', 'management', 'minigame', 'mobs', 'optimization', 'social', 'storage', 'technology', 'transportation', 'utility', 'world-generation'];
   const LOADERS = ['Fabric', 'Forge', 'NeoForge', 'Quilt'];
   // Unterstützte Minecraft-Versionen (älteste zuerst bis zur neuesten gewünschten Version).
   const VERSIONS = [
@@ -410,7 +441,29 @@
   ];
   const THEMES = ['aqua', 'ocean', 'mint', 'night'];
   const LANGS = ['de', 'en', 'fr', 'es', 'pt', 'pl', 'tr', 'nl'];
-  const LEGACY_CAT = { Optimierung: 'optimization', Abenteuer: 'adventure', Technik: 'tech', Dekoration: 'decor', Tools: 'tools', Sonstiges: 'other' };
+  const CAT_SVG = {
+    adventure: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>',
+    cursed: '<svg viewBox="0 0 24 24"><rect x="8" y="7" width="8" height="12" rx="4"/><path d="M9 7V5a3 3 0 0 1 6 0v2M4 12h4M16 12h4M4 17l3-1M20 17l-3-1M4 7l3 1M20 7l-3 1"/></svg>',
+    decoration: '<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>',
+    economy: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.5-1.5-3-1.5-1.8 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.2 2.2-3 2.2-1.6 0-2.6-.6-3.1-1.6M12 6v2M12 16v2"/></svg>',
+    equipment: '<svg viewBox="0 0 24 24"><path d="M14.5 4.5 19.5 9.5 9.5 19.5 4.5 14.5z"/><path d="M4 20l3-3"/></svg>',
+    food: '<svg viewBox="0 0 24 24"><path d="M12 21c-4 0-7-3-7-7 0-4 3-9 7-9s7 5 7 9c0 4-3 7-7 7z"/><path d="M12 5c0-2 1-3 3-3"/></svg>',
+    'game-mechanics': '<svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg>',
+    library: '<svg viewBox="0 0 24 24"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></svg>',
+    magic: '<svg viewBox="0 0 24 24"><path d="m5 19 9-9"/><path d="M16 3l.8 2.2L19 6l-2.2.8L16 9l-.8-2.2L13 6l2.2-.8z"/><path d="M8 4v2M7 5h2"/></svg>',
+    management: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>',
+    minigame: '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>',
+    mobs: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 10h.01M15 10h.01M9 15h6"/></svg>',
+    optimization: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+    social: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/></svg>',
+    storage: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg>',
+    technology: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>',
+    transportation: '<svg viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+    utility: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/></svg>',
+    'world-generation': '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>'
+  };
+  const LEGACY_CAT = { Optimierung: 'optimization', Abenteuer: 'adventure', Technik: 'technology', Dekoration: 'decoration', Tools: 'utility', Sonstiges: 'utility' };
+  const OLD_CAT = { tech: 'technology', decor: 'decoration', tools: 'utility', other: 'utility' };
 
   const SEEDS = [
     { id: 'demo1', name: 'Aqua Lights', category: 'decor', loader: 'Fabric', version: '1.21.1', downloads: 12400,
@@ -441,6 +494,23 @@
      ===================================================== */
   const I18N = {
     de: {
+      'cat.cursed': "Verflucht",
+      'cat.decoration': "Dekoration",
+      'cat.economy': "Wirtschaft",
+      'cat.equipment': "Ausrüstung",
+      'cat.food': "Essen",
+      'cat.game-mechanics': "Spielmechanik",
+      'cat.library': "Bibliothek",
+      'cat.magic': "Magie",
+      'cat.management': "Verwaltung",
+      'cat.minigame': "Minispiel",
+      'cat.mobs': "Mobs",
+      'cat.social': "Soziales",
+      'cat.storage': "Lagerung",
+      'cat.technology': "Technik",
+      'cat.transportation': "Transport",
+      'cat.utility': "Hilfsmittel",
+      'cat.world-generation': "Weltgenerierung",
       'check.provider': "KI-Anbieter",
       'check.nvidia': "NVIDIA-API-Key (nvapi-…)",
       'check.needKey': "Bitte zuerst den NVIDIA-API-Key eintragen.",
@@ -616,6 +686,23 @@
       'notfound.title': 'Seite nicht gefunden', 'notfound.link': 'Zur Startseite'
     },
     en: {
+      'cat.cursed': "Cursed",
+      'cat.decoration': "Decoration",
+      'cat.economy': "Economy",
+      'cat.equipment': "Equipment",
+      'cat.food': "Food",
+      'cat.game-mechanics': "Game Mechanics",
+      'cat.library': "Library",
+      'cat.magic': "Magic",
+      'cat.management': "Management",
+      'cat.minigame': "Minigame",
+      'cat.mobs': "Mobs",
+      'cat.social': "Social",
+      'cat.storage': "Storage",
+      'cat.technology': "Technology",
+      'cat.transportation': "Transportation",
+      'cat.utility': "Utility",
+      'cat.world-generation': "World Generation",
       'check.provider': "AI provider",
       'check.nvidia': "NVIDIA API key (nvapi-…)",
       'check.needKey': "Please enter the NVIDIA API key first.",
@@ -791,6 +878,23 @@
       'notfound.title': 'Page not found', 'notfound.link': 'Go to home'
     },
     fr: {
+      'cat.cursed': "Maudit",
+      'cat.decoration': "Décoration",
+      'cat.economy': "Économie",
+      'cat.equipment': "Équipement",
+      'cat.food': "Nourriture",
+      'cat.game-mechanics': "Mécanique de jeu",
+      'cat.library': "Bibliothèque",
+      'cat.magic': "Magie",
+      'cat.management': "Gestion",
+      'cat.minigame': "Mini-jeu",
+      'cat.mobs': "Mobs",
+      'cat.social': "Social",
+      'cat.storage': "Stockage",
+      'cat.technology': "Technologie",
+      'cat.transportation': "Transport",
+      'cat.utility': "Utilitaire",
+      'cat.world-generation': "Génération du monde",
       'check.provider': "Fournisseur IA",
       'check.nvidia': "Clé API NVIDIA (nvapi-…)",
       'check.needKey': "Saisis d'abord la clé API NVIDIA.",
@@ -868,6 +972,23 @@
       'lang.de':'Allemand','lang.en':'Anglais','lang.fr':'Français','lang.es':'Espagnol','lang.pt':'Portugais','lang.pl':'Polonais','lang.tr':'Turc','lang.nl':'Néerlandais'
     },
     es: {
+      'cat.cursed': "Maldito",
+      'cat.decoration': "Decoración",
+      'cat.economy': "Economía",
+      'cat.equipment': "Equipamiento",
+      'cat.food': "Comida",
+      'cat.game-mechanics': "Mecánicas de juego",
+      'cat.library': "Biblioteca",
+      'cat.magic': "Magia",
+      'cat.management': "Gestión",
+      'cat.minigame': "Minijuego",
+      'cat.mobs': "Mobs",
+      'cat.social': "Social",
+      'cat.storage': "Almacenamiento",
+      'cat.technology': "Tecnología",
+      'cat.transportation': "Transporte",
+      'cat.utility': "Utilidad",
+      'cat.world-generation': "Generación de mundo",
       'check.provider': "Proveedor de IA",
       'check.nvidia': "Clave API de NVIDIA (nvapi-…)",
       'check.needKey': "Introduce primero la clave API de NVIDIA.",
@@ -945,6 +1066,23 @@
       'lang.de':'Alemán','lang.en':'Inglés','lang.fr':'Francés','lang.es':'Español','lang.pt':'Portugués','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandés'
     },
     pt: {
+      'cat.cursed': "Amaldiçoado",
+      'cat.decoration': "Decoração",
+      'cat.economy': "Economia",
+      'cat.equipment': "Equipamento",
+      'cat.food': "Comida",
+      'cat.game-mechanics': "Mecânicas de jogo",
+      'cat.library': "Biblioteca",
+      'cat.magic': "Magia",
+      'cat.management': "Gestão",
+      'cat.minigame': "Minijogo",
+      'cat.mobs': "Mobs",
+      'cat.social': "Social",
+      'cat.storage': "Armazenamento",
+      'cat.technology': "Tecnologia",
+      'cat.transportation': "Transporte",
+      'cat.utility': "Utilidade",
+      'cat.world-generation': "Geração de mundo",
       'check.provider': "Provedor de IA",
       'check.nvidia': "Chave de API da NVIDIA (nvapi-…)",
       'check.needKey': "Informe primeiro a chave de API da NVIDIA.",
@@ -1022,6 +1160,23 @@
       'lang.de':'Alemão','lang.en':'Inglês','lang.fr':'Francês','lang.es':'Espanhol','lang.pt':'Português','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandês'
     },
     pl: {
+      'cat.cursed': "Przeklęte",
+      'cat.decoration': "Dekoracja",
+      'cat.economy': "Ekonomia",
+      'cat.equipment': "Wyposażenie",
+      'cat.food': "Jedzenie",
+      'cat.game-mechanics': "Mechaniki gry",
+      'cat.library': "Biblioteka",
+      'cat.magic': "Magia",
+      'cat.management': "Zarządzanie",
+      'cat.minigame': "Minigra",
+      'cat.mobs': "Moby",
+      'cat.social': "Społeczność",
+      'cat.storage': "Magazynowanie",
+      'cat.technology': "Technologia",
+      'cat.transportation': "Transport",
+      'cat.utility': "Narzędzia",
+      'cat.world-generation': "Generowanie świata",
       'check.provider': "Dostawca AI",
       'check.nvidia': "Klucz API NVIDIA (nvapi-…)",
       'check.needKey': "Najpierw wpisz klucz API NVIDIA.",
@@ -1099,6 +1254,23 @@
       'lang.de':'Niemiecki','lang.en':'Angielski','lang.fr':'Francuski','lang.es':'Hiszpański','lang.pt':'Portugalski','lang.pl':'Polski','lang.tr':'Turecki','lang.nl':'Niderlandzki'
     },
     tr: {
+      'cat.cursed': "Lanetli",
+      'cat.decoration': "Dekorasyon",
+      'cat.economy': "Ekonomi",
+      'cat.equipment': "Ekipman",
+      'cat.food': "Yiyecek",
+      'cat.game-mechanics': "Oyun mekanikleri",
+      'cat.library': "Kütüphane",
+      'cat.magic': "Büyü",
+      'cat.management': "Yönetim",
+      'cat.minigame': "Minioyun",
+      'cat.mobs': "Mobs",
+      'cat.social': "Sosyal",
+      'cat.storage': "Depolama",
+      'cat.technology': "Teknoloji",
+      'cat.transportation': "Ulaşım",
+      'cat.utility': "Yardımcı araçlar",
+      'cat.world-generation': "Dünya üretimi",
       'check.provider': "Yapay zekâ sağlayıcısı",
       'check.nvidia': "NVIDIA API anahtarı (nvapi-…)",
       'check.needKey': "Önce NVIDIA API anahtarını gir.",
@@ -1176,6 +1348,23 @@
       'lang.de':'Almanca','lang.en':'İngilizce','lang.fr':'Fransızca','lang.es':'İspanyolca','lang.pt':'Portekizce','lang.pl':'Lehçe','lang.tr':'Türkçe','lang.nl':'Felemenkçe'
     },
     nl: {
+      'cat.cursed': "Vervloekt",
+      'cat.decoration': "Decoratie",
+      'cat.economy': "Economie",
+      'cat.equipment': "Uitrusting",
+      'cat.food': "Voedsel",
+      'cat.game-mechanics': "Spelmechanica",
+      'cat.library': "Bibliotheek",
+      'cat.magic': "Magie",
+      'cat.management': "Beheer",
+      'cat.minigame': "Minigame",
+      'cat.mobs': "Mobs",
+      'cat.social': "Sociaal",
+      'cat.storage': "Opslag",
+      'cat.technology': "Technologie",
+      'cat.transportation': "Transport",
+      'cat.utility': "Hulpprogramma's",
+      'cat.world-generation': "Wereldgeneratie",
       'check.provider': "AI-aanbieder",
       'check.nvidia': "NVIDIA API-sleutel (nvapi-…)",
       'check.needKey': "Vul eerst de NVIDIA API-sleutel in.",
@@ -1295,7 +1484,8 @@
   function migrate() {
     mods.forEach(m => {
       if (LEGACY_CAT[m.category]) m.category = LEGACY_CAT[m.category];
-      if (!CATS.includes(m.category)) m.category = 'other';
+      if (OLD_CAT[m.category]) m.category = OLD_CAT[m.category];
+      if (!CATS.includes(m.category)) m.category = 'utility';
       if (!m.status) m.status = 'approved';
       if (m.hasFile === undefined) m.hasFile = false;
       const s = SEEDS.find(x => x.id === m.id);
@@ -1588,7 +1778,7 @@
           <div class="mod-marquee"><div class="mod-marquee-track" id="modMarquee"></div></div>
         </section>
         <div class="toolbar" id="discoverMods">
-          <div class="chips">${cats.map(c => `<button class="chip ${filters.cat === c ? 'on' : ''}" data-cat="${esc(c)}">${esc(t('cat.' + c))}</button>`).join('')}</div>
+          <div class="chips scroll-x">${cats.map(c => `<button class="chip ${filters.cat === c ? 'on' : ''}" data-cat="${esc(c)}">${c !== 'all' && CAT_SVG[c] ? `<span class="cat-ico">${CAT_SVG[c]}</span>` : ''}${esc(t('cat.' + c))}</button>`).join('')}</div>
           <select class="select" id="sort" aria-label="${esc(t('home.sortLabel'))}">
             <option value="popular">${esc(t('home.sort.popular'))}</option>
             <option value="new">${esc(t('home.sort.new'))}</option>
