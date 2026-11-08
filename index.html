@@ -1723,7 +1723,7 @@
             ${admin ? `<div class="btnrow"><button class="btn ghost" data-action="inspect" data-id="${esc(m.id)}">${esc(t('insp.inspect'))}</button></div>` : ''}
           </div>
           <aside class="card side">
-            ${st === 'approved' ? `<button class="btn" data-action="download" data-id="${esc(m.id)}" style="width:100%;font-size:1.05rem">${esc(t('mod.download'))}</button>` : ''}
+            ${(st === 'approved' || canDelete) ? `<button class="btn" data-action="download" data-id="${esc(m.id)}" style="width:100%;font-size:1.05rem">${esc(t('mod.download'))}</button>` : ''}
             <p class="hint center" style="margin:10px 0 18px">${esc(hint)}</p>
             <div class="infolist">
               <div><b>${esc(t('mod.downloads'))}</b><span id="dlCount">${fmt(m.downloads)}</span></div>
@@ -1741,6 +1741,9 @@
   async function downloadMod(id) {
     const m = findMod(id);
     if (!m) return;
+    const user = me();
+    const allowed = statusOf(m) === 'approved' || (!!user && (isAdmin(user) || sameName(user.name, m.author)));
+    if (!allowed) return;
     try {
       if (m.hasFile) {
         const blob = await getFile(m.id);
@@ -1756,8 +1759,10 @@
       toast(t('mod.fileMissing'));
       return;
     }
-    m.downloads = (m.downloads || 0) + 1;
-    saveMods();
+    if (statusOf(m) === 'approved') {
+      m.downloads = (m.downloads || 0) + 1;
+      saveMods();
+    }
     const c = $('#dlCount');
     if (c) c.textContent = fmt(m.downloads);
     toast(t('mod.started'));
@@ -2216,7 +2221,7 @@
         <td>${statusBadge(m)}</td>
         <td>${fmt(m.downloads)}</td>
         <td class="nowrap">${fmtDate(m.created)}</td>
-        <td><button class="btn danger small" data-action="delete-mod" data-id="${esc(m.id)}">${esc(t('profile.deleteOwn'))}</button></td>
+        <td>${(m.hasFile || m.url) ? `<button class="btn ghost small" data-action="download" data-id="${esc(m.id)}">${esc(t('mod.download'))}</button> ` : ''}<button class="btn danger small" data-action="delete-mod" data-id="${esc(m.id)}">${esc(t('profile.deleteOwn'))}</button></td>
       </tr>`).join('');
 
     return {
@@ -2491,8 +2496,11 @@
       });
       if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text().catch(() => '')).slice(0, 160));
       const data = await res.json();
-      const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      return (text || '').trim() || '—';
+      const choice = data.choices && data.choices[0];
+      const msg = (choice && choice.message) || {};
+      const text = String(msg.content || msg.reasoning_content || '').trim();
+      if (!text) throw new Error('leere KI-Antwort (finish_reason: ' + (choice && choice.finish_reason) + ') ' + JSON.stringify(data).slice(0, 300));
+      return text;
     }
     const res = await fetch(apiUrl('https://api.anthropic.com/v1/messages'), {
       method: 'POST',
@@ -2506,7 +2514,9 @@
     });
     if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text().catch(() => '')).slice(0, 160));
     const data = await res.json();
-    return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim() || '—';
+    const aiText = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    if (!aiText) throw new Error('leere KI-Antwort: ' + JSON.stringify(data).slice(0, 300));
+    return aiText;
   }
 
   async function vtPoll(key, id) {
@@ -2864,6 +2874,7 @@
           <td>${esc(t(m.hasFile ? 'admin.src.file' : 'admin.src.link'))}</td>
           <td class="nowrap">
             <button class="btn ghost small" data-action="inspect" data-id="${esc(m.id)}">${esc(t('insp.openShort'))}</button>
+            ${m.hasFile ? `<button class="btn ghost small" data-action="download" data-id="${esc(m.id)}">${esc(t('mod.download'))}</button>` : ''}
             <button class="btn small" data-action="approve" data-id="${esc(m.id)}">${esc(t('mod.approve'))}</button>
             <button class="btn ghost small" data-action="reject" data-id="${esc(m.id)}">${esc(t('mod.reject'))}</button>
             <button class="btn danger small" data-action="delete-mod" data-id="${esc(m.id)}">${esc(t('admin.deleteMod'))}</button>
