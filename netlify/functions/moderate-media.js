@@ -27,7 +27,7 @@ exports.handler = async (event) => {
   }
   if (images.reduce((n, x) => n + x.length, 0) > MAX_CHARS) return json(400, { error: 'Bilder sind zu groß' });
 
-  const model = process.env.NVIDIA_VISION_MODEL || 'meta/llama-3.2-11b-vision-instruct';
+  const model = process.env.NVIDIA_VISION_MODEL || 'meta/llama-3.2-90b-vision-instruct';
   const instruction = 'Prüfe diese Bilder. Es sind Vorschaubilder eines Minecraft-Mods (ggf. Einzelbilder aus einem Video). ' +
     'Blockiere (ok=false), wenn sie pornografische oder sexuell explizite Darstellungen, Nacktheit, drastische Gewalt, ' +
     'Hass- oder extremistische Symbole, Drogen- oder illegale Inhalte oder beleidigende Texte zeigen. ' +
@@ -48,7 +48,10 @@ exports.handler = async (event) => {
   } catch (e) {
     return json(502, { error: 'KI nicht erreichbar' });
   }
-  if (!r.ok) return json(502, { error: 'KI-Fehler HTTP ' + r.status });
+  if (!r.ok) {
+    const detail = await r.text().catch(() => '');
+    return json(502, { error: 'KI-Fehler HTTP ' + r.status + ' (Modell ' + model + '): ' + detail.slice(0, 160) });
+  }
 
   const data = await r.json();
   const text = ((data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '').trim();
