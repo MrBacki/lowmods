@@ -410,6 +410,14 @@
   .srv-card{display:flex;flex-direction:column;gap:10px}
   /* Schriften für alle Sprachen */
   body,button,input,select,textarea{font-family:"Noto Sans","Noto Sans Arabic","Noto Sans Bengali","Noto Sans Devanagari","Noto Sans JP","Noto Sans SC","Noto Nastaliq Urdu",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
+  /* ===== Eigene Dialoge ===== */
+  .ui-dialog-wrap{position:fixed;inset:0;z-index:400;background:rgba(3,10,8,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeUp .25s ease both}
+  .ui-dialog{width:min(420px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:22px}
+  .ui-msg{font-size:1.02rem;font-weight:600;line-height:1.5;margin-bottom:14px}
+  .ui-input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--ink);margin-bottom:14px;font:inherit;outline:none;transition:border-color .25s,box-shadow .25s}
+  .ui-input:focus{border-color:var(--accent-2);box-shadow:0 0 0 4px rgba(6,182,212,.15)}
+  .ui-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
@@ -527,6 +535,8 @@
      ===================================================== */
   const I18N = {
     de: {
+      'ui.ok': "OK",
+      'ui.cancel': "Abbrechen",
       'insp.secMedia': "Vorschau-Analyse",
       'insp.mediaAi': "Mit KI analysieren",
       'insp.mediaBusy': "KI analysiert…",
@@ -813,6 +823,8 @@
       'notfound.title': 'Seite nicht gefunden', 'notfound.link': 'Zur Startseite'
     },
     en: {
+      'ui.ok': "OK",
+      'ui.cancel': "Cancel",
       'insp.secMedia': "Preview analysis",
       'insp.mediaAi': "Analyze with AI",
       'insp.mediaBusy': "AI is analyzing…",
@@ -1099,6 +1111,8 @@
       'notfound.title': 'Page not found', 'notfound.link': 'Go to home'
     },
     fr: {
+      'ui.ok': "OK",
+      'ui.cancel': "Annuler",
       'insp.secMedia': "Analyse de l'aperçu",
       'insp.mediaAi': "Analyser avec l'IA",
       'insp.mediaBusy': "L'IA analyse…",
@@ -1287,6 +1301,8 @@
       'lang.de':'Allemand','lang.en':'Anglais','lang.fr':'Français','lang.es':'Espagnol','lang.pt':'Portugais','lang.pl':'Polonais','lang.tr':'Turc','lang.nl':'Néerlandais'
     },
     es: {
+      'ui.ok': "Aceptar",
+      'ui.cancel': "Cancelar",
       'insp.secMedia': "Análisis de la vista previa",
       'insp.mediaAi': "Analizar con IA",
       'insp.mediaBusy': "La IA está analizando…",
@@ -1475,6 +1491,8 @@
       'lang.de':'Alemán','lang.en':'Inglés','lang.fr':'Francés','lang.es':'Español','lang.pt':'Portugués','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandés'
     },
     pt: {
+      'ui.ok': "OK",
+      'ui.cancel': "Cancelar",
       'insp.secMedia': "Análise da pré-visualização",
       'insp.mediaAi': "Analisar com IA",
       'insp.mediaBusy': "A IA está analisando…",
@@ -1663,6 +1681,8 @@
       'lang.de':'Alemão','lang.en':'Inglês','lang.fr':'Francês','lang.es':'Espanhol','lang.pt':'Português','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandês'
     },
     pl: {
+      'ui.ok': "OK",
+      'ui.cancel': "Anuluj",
       'insp.secMedia': "Analiza podglądu",
       'insp.mediaAi': "Analizuj z AI",
       'insp.mediaBusy': "AI analizuje…",
@@ -1851,6 +1871,8 @@
       'lang.de':'Niemiecki','lang.en':'Angielski','lang.fr':'Francuski','lang.es':'Hiszpański','lang.pt':'Portugalski','lang.pl':'Polski','lang.tr':'Turecki','lang.nl':'Niderlandzki'
     },
     tr: {
+      'ui.ok': "Tamam",
+      'ui.cancel': "İptal",
       'insp.secMedia': "Önizleme analizi",
       'insp.mediaAi': "Yapay zekâ ile analiz et",
       'insp.mediaBusy': "Yapay zekâ analiz ediyor…",
@@ -2039,6 +2061,8 @@
       'lang.de':'Almanca','lang.en':'İngilizce','lang.fr':'Fransızca','lang.es':'İspanyolca','lang.pt':'Portekizce','lang.pl':'Lehçe','lang.tr':'Türkçe','lang.nl':'Felemenkçe'
     },
     nl: {
+      'ui.ok': "OK",
+      'ui.cancel': "Annuleren",
       'insp.secMedia': "Voorbeeldanalyse",
       'insp.mediaAi': "Analyseren met AI",
       'insp.mediaBusy': "AI analyseert…",
@@ -2228,6 +2252,8 @@
     }
 ,
     zh: {
+      'ui.ok': "确定",
+      'ui.cancel': "取消",
       'insp.secMedia': "预览分析",
       'insp.mediaAi': "用 AI 分析",
       'insp.mediaBusy': "AI 分析中…",
@@ -2321,6 +2347,8 @@
       'notfound.link': "返回首页",
     },
     hi: {
+      'ui.ok': "ठीक है",
+      'ui.cancel': "रद्द करें",
       'insp.secMedia': "पूर्वावलोकन विश्लेषण",
       'insp.mediaAi': "AI से विश्लेषण करें",
       'insp.mediaBusy': "AI विश्लेषण कर रहा है…",
@@ -2414,6 +2442,8 @@
       'notfound.link': "होम पर जाएं",
     },
     ar: {
+      'ui.ok': "حسنًا",
+      'ui.cancel': "إلغاء",
       'insp.secMedia': "تحليل المعاينة",
       'insp.mediaAi': "تحليل بالذكاء الاصطناعي",
       'insp.mediaBusy': "جارٍ التحليل بالذكاء الاصطناعي…",
@@ -2507,6 +2537,8 @@
       'notfound.link': "العودة للرئيسية",
     },
     bn: {
+      'ui.ok': "ঠিক আছে",
+      'ui.cancel': "বাতিল",
       'insp.secMedia': "প্রিভিউ বিশ্লেষণ",
       'insp.mediaAi': "AI দিয়ে বিশ্লেষণ করুন",
       'insp.mediaBusy': "AI বিশ্লেষণ করছে…",
@@ -2600,6 +2632,8 @@
       'notfound.link': "হোমে যান",
     },
     ru: {
+      'ui.ok': "ОК",
+      'ui.cancel': "Отмена",
       'insp.secMedia': "Анализ превью",
       'insp.mediaAi': "Анализ с помощью ИИ",
       'insp.mediaBusy': "ИИ анализирует…",
@@ -2693,6 +2727,8 @@
       'notfound.link': "На главную",
     },
     ur: {
+      'ui.ok': "ٹھیک ہے",
+      'ui.cancel': "منسوخ",
       'insp.secMedia': "پیش نظارہ کا تجزیہ",
       'insp.mediaAi': "AI سے تجزیہ کریں",
       'insp.mediaBusy': "AI تجزیہ کر رہا ہے…",
@@ -2786,6 +2822,8 @@
       'notfound.link': "ہوم پر جائیں",
     },
     id: {
+      'ui.ok': "OK",
+      'ui.cancel': "Batal",
       'insp.secMedia': "Analisis pratinjau",
       'insp.mediaAi': "Analisis dengan AI",
       'insp.mediaBusy': "AI sedang menganalisis…",
@@ -2879,6 +2917,8 @@
       'notfound.link': "Ke beranda",
     },
     ja: {
+      'ui.ok': "OK",
+      'ui.cancel': "キャンセル",
       'insp.secMedia': "プレビュー分析",
       'insp.mediaAi': "AIで分析",
       'insp.mediaBusy': "AIが分析中…",
@@ -2972,6 +3012,8 @@
       'notfound.link': "ホームへ",
     },
     pcm: {
+      'ui.ok': "OK",
+      'ui.cancel': "Cancel",
       'insp.secMedia': "Preview analysis",
       'insp.mediaAi': "Analyze with AI",
       'insp.mediaBusy': "AI dey analyze am…",
@@ -3065,6 +3107,8 @@
       'notfound.link': "Go home",
     },
     mr: {
+      'ui.ok': "ठीक आहे",
+      'ui.cancel': "रद्द करा",
       'insp.secMedia': "पूर्वावलोकन विश्लेषण",
       'insp.mediaAi': "AI ने विश्लेषण करा",
       'insp.mediaBusy': "AI विश्लेषण करत आहे…",
@@ -4877,7 +4921,7 @@
       return;
     }
     if (act === 'reject') {
-      const reason = prompt(t('admin.rejectPrompt'), '');
+      const reason = await promptDialog(t('admin.rejectPrompt'), '');
       if (reason === null) return;
       m.status = 'rejected'; m.rejectReason = reason.trim(); m.reviewedBy = user.name; saveMods();
       toast(t('admin.rejected', { name: m.name }));
@@ -5252,6 +5296,48 @@
     }
   }
 
+  /* =====================================================
+     Eigene Dialoge im Seitenstil (statt Browser-Fenster)
+     ===================================================== */
+  function uiDialog({ message, input, def, ok, cancel }) {
+    return new Promise(resolve => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ui-dialog-wrap';
+      wrap.innerHTML = `<div class="ui-dialog" role="dialog" aria-modal="true">
+        <p class="ui-msg">${esc(message)}</p>
+        ${input ? `<input class="ui-input" value="${esc(def)}">` : ''}
+        <div class="ui-actions">
+          <button class="btn ghost small" data-r="cancel">${esc(cancel)}</button>
+          <button class="btn small" data-r="ok">${esc(ok)}</button>
+        </div>
+      </div>`;
+      document.body.appendChild(wrap);
+      const field = wrap.querySelector('.ui-input');
+      const done = val => {
+        document.removeEventListener('keydown', onKey);
+        wrap.remove();
+        resolve(val);
+      };
+      const onKey = e => {
+        if (e.key === 'Escape') done(null);
+        if (e.key === 'Enter') done(field ? field.value : true);
+      };
+      wrap.addEventListener('click', e => {
+        const b = e.target.closest('[data-r]');
+        if (b) return done(b.dataset.r === 'ok' ? (field ? field.value : true) : null);
+        if (e.target === wrap) done(null);
+      });
+      document.addEventListener('keydown', onKey);
+      (field || wrap.querySelector('[data-r="ok"]')).focus();
+    });
+  }
+  function confirmDialog(message) {
+    return uiDialog({ message, input: false, ok: t('ui.ok'), cancel: t('ui.cancel') }).then(v => v !== null);
+  }
+  function promptDialog(message, def) {
+    return uiDialog({ message, input: true, def: def || '', ok: t('ui.ok'), cancel: t('ui.cancel') });
+  }
+
   let adminTab = 'overview';
   const revealed = new Set(); // Namen (klein), deren Passwort sichtbar ist
 
@@ -5462,7 +5548,7 @@
           break;
         }
         case 'srv-del': {
-          if (!confirm(t('servers.confirmDelete'))) return;
+          if (!(await confirmDialog(t('servers.confirmDelete')))) return;
           const { error } = await sb.from('servers').delete().eq('id', id);
           if (error) { toast(error.message); return; }
           await loadAll();
@@ -5552,7 +5638,7 @@
           const own = sameName(user.name, m.author);
           if (!(admin || own)) return;
           const msg = (admin && !own) ? t('admin.confirmMod', { name: m.name }) : t('mod.confirmDelete', { name: m.name });
-          if (!confirm(msg)) return;
+          if (!(await confirmDialog(msg))) return;
           await removeMod(id);
           toast((admin && !own) ? t('admin.modDeleted') : t('mod.deleted'));
           if (location.hash.startsWith('#/mod/')) go('#/');
@@ -5574,7 +5660,7 @@
         case 'reject': {
           const m = findMod(id);
           if (!m) return;
-          const reason = prompt(t('admin.rejectPrompt'), '');
+          const reason = await promptDialog(t('admin.rejectPrompt'), '');
           if (reason === null) return;
           m.status = 'rejected';
           m.rejectReason = reason.trim();
@@ -5596,7 +5682,7 @@
           const p = modpacks.find(x => x.id === id);
           if (!p || !user) return;
           if (!(sameName(p.author, user.name) || admin)) return;
-          if (!confirm(t('modpack.confirmDelete', { name: p.name }))) return;
+          if (!(await confirmDialog(t('modpack.confirmDelete', { name: p.name })))) return;
           await deletePack(p);
           toast(t('modpack.deleted'));
           break;
@@ -5616,7 +5702,7 @@
         case 'pw': {
           const u = findUser(key);
           if (!u) return;
-          const np = prompt(t('admin.pwPrompt', { name: u.name }));
+          const np = await promptDialog(t('admin.pwPrompt', { name: u.name }));
           if (np === null) return;
           if (np.length < 4) { toast(t('auth.errPwLen')); return; }
           u.password = np;
@@ -5628,7 +5714,7 @@
         case 'del-user': {
           const u = findUser(key);
           if (!u || isAdmin(u)) return;
-          if (!confirm(t('admin.confirmUser', { name: u.name }))) return;
+          if (!(await confirmDialog(t('admin.confirmUser', { name: u.name })))) return;
           const theirs = mods.filter(m => sameName(m.author, u.name)).map(m => m.id);
           for (const mid of theirs) await removeMod(mid);
           modpacks = modpacks.filter(p => !sameName(p.author, u.name));
