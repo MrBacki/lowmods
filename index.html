@@ -471,6 +471,7 @@
     '1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11',
     '26.1','26.1.1','26.1.2','26.2','26.3'
   ];
+  VERSIONS.sort((a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; } return 0; });
   const THEMES = ['aqua', 'ocean', 'mint', 'night'];
   const LANGS = ['de', 'en', 'zh', 'hi', 'es', 'fr', 'ar', 'bn', 'pt', 'ru', 'ur', 'id', 'ja', 'pcm', 'mr', 'pl', 'tr', 'nl'];
   const CAT_SVG = {
@@ -526,6 +527,14 @@
      ===================================================== */
   const I18N = {
     de: {
+      'upload.media': "Vorschau-Bild oder -Video (optional)",
+      'upload.mediaHint': "Bild oder Video. Die KI prüft es auf unangemessene Inhalte.",
+      'media.loading': "Vorschau wird geladen…",
+      'media.errLoad': "Vorschau konnte nicht geladen werden.",
+      'media.errRead': "Bild oder Video konnte nicht gelesen werden.",
+      'media.errUnavailable': "Die Medienprüfung ist gerade nicht erreichbar. Bitte später erneut versuchen.",
+      'media.blocked': "Das Bild oder Video wurde blockiert: {r}",
+      'media.okNote': "Die KI hat keine unangemessenen Inhalte gefunden.",
       'admin.searchUsers': "Benutzer suchen…",
       'servers.sendBtn': "Server einsenden",
       'servers.versionFrom': "Von Version",
@@ -799,6 +808,14 @@
       'notfound.title': 'Seite nicht gefunden', 'notfound.link': 'Zur Startseite'
     },
     en: {
+      'upload.media': "Preview image or video (optional)",
+      'upload.mediaHint': "Image or video. The AI checks it for inappropriate content.",
+      'media.loading': "Loading preview…",
+      'media.errLoad': "Preview could not be loaded.",
+      'media.errRead': "Image or video could not be read.",
+      'media.errUnavailable': "The media check is unavailable right now. Please try again later.",
+      'media.blocked': "The image or video was blocked: {r}",
+      'media.okNote': "The AI found no inappropriate content.",
       'admin.searchUsers': "Search users…",
       'servers.sendBtn': "Submit a server",
       'servers.versionFrom': "From version",
@@ -1072,6 +1089,14 @@
       'notfound.title': 'Page not found', 'notfound.link': 'Go to home'
     },
     fr: {
+      'upload.media': "Image ou vidéo d'aperçu (facultatif)",
+      'upload.mediaHint': "Image ou vidéo. L'IA la vérifie pour détecter les contenus inappropriés.",
+      'media.loading': "Chargement de l'aperçu…",
+      'media.errLoad': "L'aperçu n'a pas pu être chargé.",
+      'media.errRead': "L'image ou la vidéo n'a pas pu être lue.",
+      'media.errUnavailable': "La vérification du média est indisponible. Réessaie plus tard.",
+      'media.blocked': "L'image ou la vidéo a été bloquée : {r}",
+      'media.okNote': "L'IA n'a trouvé aucun contenu inapproprié.",
       'admin.searchUsers': "Rechercher un utilisateur…",
       'servers.sendBtn': "Envoyer un serveur",
       'servers.versionFrom': "De la version",
@@ -1247,6 +1272,14 @@
       'lang.de':'Allemand','lang.en':'Anglais','lang.fr':'Français','lang.es':'Espagnol','lang.pt':'Portugais','lang.pl':'Polonais','lang.tr':'Turc','lang.nl':'Néerlandais'
     },
     es: {
+      'upload.media': "Imagen o video de vista previa (opcional)",
+      'upload.mediaHint': "Imagen o video. La IA lo revisa en busca de contenido inapropiado.",
+      'media.loading': "Cargando vista previa…",
+      'media.errLoad': "No se pudo cargar la vista previa.",
+      'media.errRead': "No se pudo leer la imagen o el video.",
+      'media.errUnavailable': "La comprobación del medio no está disponible. Inténtalo más tarde.",
+      'media.blocked': "La imagen o el video fue bloqueado: {r}",
+      'media.okNote': "La IA no encontró contenido inapropiado.",
       'admin.searchUsers': "Buscar usuario…",
       'servers.sendBtn': "Enviar un servidor",
       'servers.versionFrom': "Desde la versión",
@@ -1422,6 +1455,14 @@
       'lang.de':'Alemán','lang.en':'Inglés','lang.fr':'Francés','lang.es':'Español','lang.pt':'Portugués','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandés'
     },
     pt: {
+      'upload.media': "Imagem ou vídeo de pré-visualização (opcional)",
+      'upload.mediaHint': "Imagem ou vídeo. A IA verifica se há conteúdo impróprio.",
+      'media.loading': "Carregando pré-visualização…",
+      'media.errLoad': "Não foi possível carregar a pré-visualização.",
+      'media.errRead': "Não foi possível ler a imagem ou o vídeo.",
+      'media.errUnavailable': "A verificação de mídia está indisponível. Tente mais tarde.",
+      'media.blocked': "A imagem ou o vídeo foi bloqueado: {r}",
+      'media.okNote': "A IA não encontrou conteúdo impróprio.",
       'admin.searchUsers': "Pesquisar usuário…",
       'servers.sendBtn': "Enviar um servidor",
       'servers.versionFrom': "Da versão",
@@ -1597,6 +1638,14 @@
       'lang.de':'Alemão','lang.en':'Inglês','lang.fr':'Francês','lang.es':'Espanhol','lang.pt':'Português','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandês'
     },
     pl: {
+      'upload.media': "Podgląd: obraz lub wideo (opcjonalnie)",
+      'upload.mediaHint': "Obraz lub wideo. AI sprawdza, czy nie ma nieodpowiednich treści.",
+      'media.loading': "Ładowanie podglądu…",
+      'media.errLoad': "Nie udało się wczytać podglądu.",
+      'media.errRead': "Nie udało się odczytać obrazu lub wideo.",
+      'media.errUnavailable': "Sprawdzanie mediów jest chwilowo niedostępne. Spróbuj później.",
+      'media.blocked': "Obraz lub wideo zostało zablokowane: {r}",
+      'media.okNote': "AI nie znalazło nieodpowiednich treści.",
       'admin.searchUsers': "Szukaj użytkownika…",
       'servers.sendBtn': "Wyślij serwer",
       'servers.versionFrom': "Od wersji",
@@ -1772,6 +1821,14 @@
       'lang.de':'Niemiecki','lang.en':'Angielski','lang.fr':'Francuski','lang.es':'Hiszpański','lang.pt':'Portugalski','lang.pl':'Polski','lang.tr':'Turecki','lang.nl':'Niderlandzki'
     },
     tr: {
+      'upload.media': "Önizleme görseli veya videosu (isteğe bağlı)",
+      'upload.mediaHint': "Görsel veya video. Yapay zekâ uygunsuz içerik için kontrol eder.",
+      'media.loading': "Önizleme yükleniyor…",
+      'media.errLoad': "Önizleme yüklenemedi.",
+      'media.errRead': "Görsel veya video okunamadı.",
+      'media.errUnavailable': "Medya kontrolü şu anda kullanılamıyor. Lütfen daha sonra tekrar dene.",
+      'media.blocked': "Görsel veya video engellendi: {r}",
+      'media.okNote': "Yapay zekâ uygunsuz içerik bulmadı.",
       'admin.searchUsers': "Kullanıcı ara…",
       'servers.sendBtn': "Sunucu gönder",
       'servers.versionFrom': "Sürümden",
@@ -1947,6 +2004,14 @@
       'lang.de':'Almanca','lang.en':'İngilizce','lang.fr':'Fransızca','lang.es':'İspanyolca','lang.pt':'Portekizce','lang.pl':'Lehçe','lang.tr':'Türkçe','lang.nl':'Felemenkçe'
     },
     nl: {
+      'upload.media': "Voorbeeldafbeelding of video (optioneel)",
+      'upload.mediaHint': "Afbeelding of video. De AI controleert op ongepaste inhoud.",
+      'media.loading': "Voorbeeld laden…",
+      'media.errLoad': "Voorbeeld kon niet worden geladen.",
+      'media.errRead': "Afbeelding of video kon niet worden gelezen.",
+      'media.errUnavailable': "De mediacontrole is nu niet beschikbaar. Probeer het later opnieuw.",
+      'media.blocked': "De afbeelding of video is geblokkeerd: {r}",
+      'media.okNote': "De AI vond geen ongepaste inhoud.",
       'admin.searchUsers': "Gebruiker zoeken…",
       'servers.sendBtn': "Server indienen",
       'servers.versionFrom': "Vanaf versie",
@@ -2123,6 +2188,14 @@
     }
 ,
     zh: {
+      'upload.media': "预览图片或视频（可选）",
+      'upload.mediaHint': "图片或视频。AI 会检查是否有不当内容。",
+      'media.loading': "正在加载预览…",
+      'media.errLoad': "无法加载预览。",
+      'media.errRead': "无法读取图片或视频。",
+      'media.errUnavailable': "媒体检查暂时不可用，请稍后再试。",
+      'media.blocked': "图片或视频已被拦截：{r}",
+      'media.okNote': "AI 未发现不当内容。",
       'admin.searchUsers': "搜索用户…",
       'servers.sendBtn': "提交服务器",
       'servers.versionFrom': "起始版本",
@@ -2203,6 +2276,14 @@
       'notfound.link': "返回首页",
     },
     hi: {
+      'upload.media': "पूर्वावलोकन छवि या वीडियो (वैकल्पिक)",
+      'upload.mediaHint': "छवि या वीडियो। AI अनुचित सामग्री के लिए जाँचता है।",
+      'media.loading': "पूर्वावलोकन लोड हो रहा है…",
+      'media.errLoad': "पूर्वावलोकन लोड नहीं हो सका।",
+      'media.errRead': "छवि या वीडियो पढ़ा नहीं जा सका।",
+      'media.errUnavailable': "मीडिया जाँच अभी उपलब्ध नहीं है। कृपया बाद में फिर से कोशिश करें।",
+      'media.blocked': "छवि या वीडियो अवरुद्ध किया गया: {r}",
+      'media.okNote': "AI को कोई अनुचित सामग्री नहीं मिली।",
       'admin.searchUsers': "उपयोगकर्ता खोजें…",
       'servers.sendBtn': "सर्वर सबमिट करें",
       'servers.versionFrom': "शुरुआती संस्करण",
@@ -2283,6 +2364,14 @@
       'notfound.link': "होम पर जाएं",
     },
     ar: {
+      'upload.media': "صورة أو فيديو للمعاينة (اختياري)",
+      'upload.mediaHint': "صورة أو فيديو. يتحقق الذكاء الاصطناعي من وجود محتوى غير لائق.",
+      'media.loading': "جارٍ تحميل المعاينة…",
+      'media.errLoad': "تعذر تحميل المعاينة.",
+      'media.errRead': "تعذرت قراءة الصورة أو الفيديو.",
+      'media.errUnavailable': "فحص الوسائط غير متاح الآن. حاول لاحقاً.",
+      'media.blocked': "تم حظر الصورة أو الفيديو: {r}",
+      'media.okNote': "لم يجد الذكاء الاصطناعي أي محتوى غير لائق.",
       'admin.searchUsers': "ابحث عن مستخدم…",
       'servers.sendBtn': "إرسال خادم",
       'servers.versionFrom': "من الإصدار",
@@ -2363,6 +2452,14 @@
       'notfound.link': "العودة للرئيسية",
     },
     bn: {
+      'upload.media': "প্রিভিউ ছবি বা ভিডিও (ঐচ্ছিক)",
+      'upload.mediaHint': "ছবি বা ভিডিও। AI অনুপযুক্ত কনটেন্ট পরীক্ষা করে।",
+      'media.loading': "প্রিভিউ লোড হচ্ছে…",
+      'media.errLoad': "প্রিভিউ লোড করা যায়নি।",
+      'media.errRead': "ছবি বা ভিডিও পড়া যায়নি।",
+      'media.errUnavailable': "মিডিয়া যাচাই এখন পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।",
+      'media.blocked': "ছবি বা ভিডিও ব্লক করা হয়েছে: {r}",
+      'media.okNote': "AI কোনো অনুপযুক্ত কনটেন্ট পায়নি।",
       'admin.searchUsers': "ব্যবহারকারী খুঁজুন…",
       'servers.sendBtn': "সার্ভার জমা দিন",
       'servers.versionFrom': "শুরুর সংস্করণ",
@@ -2443,6 +2540,14 @@
       'notfound.link': "হোমে যান",
     },
     ru: {
+      'upload.media': "Превью: изображение или видео (необязательно)",
+      'upload.mediaHint': "Изображение или видео. ИИ проверит их на неприемлемый контент.",
+      'media.loading': "Загрузка превью…",
+      'media.errLoad': "Не удалось загрузить превью.",
+      'media.errRead': "Не удалось прочитать изображение или видео.",
+      'media.errUnavailable': "Проверка медиа сейчас недоступна. Попробуйте позже.",
+      'media.blocked': "Изображение или видео заблокировано: {r}",
+      'media.okNote': "ИИ не нашёл неприемлемого контента.",
       'admin.searchUsers': "Поиск пользователя…",
       'servers.sendBtn': "Отправить сервер",
       'servers.versionFrom': "С версии",
@@ -2523,6 +2628,14 @@
       'notfound.link': "На главную",
     },
     ur: {
+      'upload.media': "پیش نظارہ تصویر یا ویڈیو (اختیاری)",
+      'upload.mediaHint': "تصویر یا ویڈیو۔ AI نامناسب مواد کی جانچ کرتا ہے۔",
+      'media.loading': "پیش نظارہ لوڈ ہو رہا ہے…",
+      'media.errLoad': "پیش نظارہ لوڈ نہیں ہو سکا۔",
+      'media.errRead': "تصویر یا ویڈیو پڑھی نہیں جا سکی۔",
+      'media.errUnavailable': "میڈیا کی جانچ ابھی دستیاب نہیں۔ بعد میں کوشش کریں۔",
+      'media.blocked': "تصویر یا ویڈیو مسدود کر دی گئی: {r}",
+      'media.okNote': "AI کو کوئی نامناسب مواد نہیں ملا۔",
       'admin.searchUsers': "صارف تلاش کریں…",
       'servers.sendBtn': "سرور جمع کرائیں",
       'servers.versionFrom': "ابتدائی ورژن",
@@ -2603,6 +2716,14 @@
       'notfound.link': "ہوم پر جائیں",
     },
     id: {
+      'upload.media': "Gambar atau video pratinjau (opsional)",
+      'upload.mediaHint': "Gambar atau video. AI memeriksa konten yang tidak pantas.",
+      'media.loading': "Memuat pratinjau…",
+      'media.errLoad': "Pratinjau tidak dapat dimuat.",
+      'media.errRead': "Gambar atau video tidak dapat dibaca.",
+      'media.errUnavailable': "Pemeriksaan media sedang tidak tersedia. Coba lagi nanti.",
+      'media.blocked': "Gambar atau video diblokir: {r}",
+      'media.okNote': "AI tidak menemukan konten yang tidak pantas.",
       'admin.searchUsers': "Cari pengguna…",
       'servers.sendBtn': "Kirim server",
       'servers.versionFrom': "Dari versi",
@@ -2683,6 +2804,14 @@
       'notfound.link': "Ke beranda",
     },
     ja: {
+      'upload.media': "プレビュー画像または動画（任意）",
+      'upload.mediaHint': "画像または動画。AIが不適切な内容がないか確認します。",
+      'media.loading': "プレビューを読み込み中…",
+      'media.errLoad': "プレビューを読み込めませんでした。",
+      'media.errRead': "画像または動画を読み込めませんでした。",
+      'media.errUnavailable': "メディアの確認が現在利用できません。後でもう一度お試しください。",
+      'media.blocked': "画像または動画はブロックされました：{r}",
+      'media.okNote': "AIは不適切な内容を検出しませんでした。",
       'admin.searchUsers': "ユーザーを検索…",
       'servers.sendBtn': "サーバーを申請",
       'servers.versionFrom': "開始バージョン",
@@ -2763,6 +2892,14 @@
       'notfound.link': "ホームへ",
     },
     pcm: {
+      'upload.media': "Preview picture or video (optional)",
+      'upload.mediaHint': "Picture or video. AI go check if e get bad content.",
+      'media.loading': "Dey load preview…",
+      'media.errLoad': "Preview no load.",
+      'media.errRead': "Picture or video no fit read.",
+      'media.errUnavailable': "Media check no dey available now. Try again later.",
+      'media.blocked': "Dem block di picture or video: {r}",
+      'media.okNote': "AI no see any bad content.",
       'admin.searchUsers': "Find user…",
       'servers.sendBtn': "Submit server",
       'servers.versionFrom': "From version",
@@ -2843,6 +2980,14 @@
       'notfound.link': "Go home",
     },
     mr: {
+      'upload.media': "पूर्वावलोकन प्रतिमा किंवा व्हिडिओ (ऐच्छिक)",
+      'upload.mediaHint': "प्रतिमा किंवा व्हिडिओ. AI अयोग्य सामग्री तपासते.",
+      'media.loading': "पूर्वावलोकन लोड होत आहे…",
+      'media.errLoad': "पूर्वावलोकन लोड होऊ शकले नाही.",
+      'media.errRead': "प्रतिमा किंवा व्हिडिओ वाचता आला नाही.",
+      'media.errUnavailable': "मीडिया तपासणी सध्या उपलब्ध नाही. नंतर पुन्हा प्रयत्न करा.",
+      'media.blocked': "प्रतिमा किंवा व्हिडिओ अवरोधित केला: {r}",
+      'media.okNote': "AI ला अयोग्य सामग्री आढळली नाही.",
       'admin.searchUsers': "वापरकर्ता शोधा…",
       'servers.sendBtn': "सर्व्हर सबमिट करा",
       'servers.versionFrom': "पासून आवृत्ती",
@@ -3006,7 +3151,8 @@
       created: ts(r.created_at), hasFile: !!r.file_path, filePath: r.file_path || null,
       fileName: r.file_name || '', fileSize: r.file_size || 0,
       sha256: r.sha256 || null, vt: r.vt || null, chat: [],
-      contentType: r.content_type || 'mod', environment: r.environment || 'both'
+      contentType: r.content_type || 'mod', environment: r.environment || 'both',
+      mediaPath: r.media_path || null, mediaName: r.media_name || '', mediaType: r.media_type || null, mediaNote: r.media_note || null
     };
   }
   function toRow(m, withId) {
@@ -3017,7 +3163,8 @@
       downloads: m.downloads || 0, file_path: m.filePath || null,
       file_name: m.fileName || null, file_size: m.fileSize || null,
       sha256: m.sha256 || null, vt: m.vt || null,
-      content_type: m.contentType || 'mod', environment: m.environment || 'both'
+      content_type: m.contentType || 'mod', environment: m.environment || 'both',
+      media_path: m.mediaPath || null, media_name: m.mediaName || null, media_type: m.mediaType || null, media_note: m.mediaNote || null
     };
     if (withId) row.id = m.id;
     return row;
@@ -3254,6 +3401,7 @@
     if (view.bind) view.bind();
     const rt = parseRoute();
     if (rt.name === 'mod') { const mm = findMod(rt.arg); if (mm) loadChat(mm); }
+    loadMediaEls();
   }
 
   /* =====================================================
@@ -3461,7 +3609,8 @@
               ${st !== 'approved' ? statusBadge(m) : ''}
             </div>
             ${hasMultipleVersions ? `<div class="tabs" style="margin-top:22px;margin-bottom:14px"><button type="button" class="on" data-action="mod-version-tab" data-pane="description">${esc(t('mod.description'))}</button><button type="button" data-action="mod-version-tab" data-pane="versions">Versions (${relatedVersions.length})</button></div>` : `<h2 class="sub">${esc(t('mod.description'))}</h2>`}
-            <section data-mod-panel="description"><div class="desc">${esc(T(m, 'description') || t('mod.noDesc'))}</div></section>
+            <section data-mod-panel="description">${mediaHtml(m)}
+            <div class="desc">${esc(T(m, 'description') || t('mod.noDesc'))}</div></section>
             ${hasMultipleVersions ? `<section data-mod-panel="versions" hidden><div class="version-list">${versionPanel}</div></section>` : ''}
             ${adminBtns}
             ${admin ? `<div class="btnrow"><button class="btn ghost" data-action="inspect" data-id="${esc(m.id)}">${esc(t('insp.inspect'))}</button></div>` : ''}
@@ -3660,7 +3809,12 @@
                 <span class="hint">${esc(t('upload.fileHint'))}</span>
               </div>
               <p class="hint" style="margin:-4px 0 16px">${esc(t('upload.or'))}</p>
-              <button class="btn" type="submit" style="width:100%">${esc(t('upload.submit'))}</button>
+              <div class="field">
+          <label for="f_media">${esc(t('upload.media'))}</label>
+          <input id="f_media" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm">
+          <span class="hint">${esc(t('upload.mediaHint'))}</span>
+        </div>
+        <button class="btn" type="submit" style="width:100%">${esc(t('upload.submit'))}</button>
             </form>
           </div>
         </div>`,
@@ -3676,6 +3830,7 @@
           const description = $('#f_desc').value.trim();
           const url = $('#f_url').value.trim();
           const file = $('#f_file').files[0] || null;
+          const media = $('#f_media') ? ($('#f_media').files[0] || null) : null;
           const ctype = $('#f_type').value;
           const cenv = $('#f_env').value;
 
@@ -3698,6 +3853,30 @@
           }
 
           const admin = isAdmin(user);
+          let mediaNote = null;
+          if (media) {
+            if (media.size > MAX_FILE) return showError('formErr', t('upload.errSize'));
+            if (!/^(image|video)\//.test(media.type)) return showError('formErr', t('media.errRead'));
+            let frames;
+            try { frames = await extractFrames(media); } catch (err) { return showError('formErr', t('media.errRead')); }
+            let verdict;
+            try {
+              const r = await fetch('/.netlify/functions/moderate-media', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ images: frames })
+              });
+              const raw = await r.text();
+              let parsed = null;
+              try { parsed = JSON.parse(raw); } catch (e2) { parsed = null; }
+              if (!r.ok || !parsed) throw new Error('nicht verfügbar');
+              verdict = parsed;
+            } catch (err) {
+              return showError('formErr', t('media.errUnavailable'));
+            }
+            if (!verdict.ok) return showError('formErr', t('media.blocked', { r: verdict.reason || '—' }));
+            mediaNote = verdict.reason || t('media.okNote');
+          }
           let sha = null;
           if (file && file.size <= HASH_MAX) sha = await sha256Hex(file);
           const id = uid();
@@ -3708,7 +3887,11 @@
             status: admin ? 'approved' : 'pending', rejectReason: '',
             hasFile: !!file, filePath: file ? id + '/' + safeFileName(file.name) : null,
             fileName: file ? file.name : '', fileSize: file ? file.size : 0,
-            sha256: sha, vt: null, chat: [], contentType: ctype, environment: cenv
+            sha256: sha, vt: null, chat: [], contentType: ctype, environment: cenv,
+            mediaPath: media ? id + '/media-' + safeFileName(media.name) : null,
+            mediaName: media ? media.name : '',
+            mediaType: media ? (media.type.startsWith('video/') ? 'video' : 'image') : null,
+            mediaNote: mediaNote
           };
           const { error: insErr } = await sb.from('mods').insert(toRow(mod, true));
           if (insErr) {
@@ -3721,6 +3904,15 @@
             catch (err) {
               await sb.from('mods').delete().eq('id', id);
               return showError('formErr', (err && err.message) ? 'Speicher-Fehler: ' + err.message : t('upload.errStorage'));
+            }
+          }
+          if (media) {
+            try {
+              const { error: mErr } = await sb.storage.from('mods').upload(mod.mediaPath, media);
+              if (mErr) throw mErr;
+            } catch (err) {
+              await sb.from('mods').delete().eq('id', id);
+              return showError('formErr', 'Vorschau konnte nicht gespeichert werden: ' + (err.message || err));
             }
           }
           mods.unshift(mod);
@@ -4862,6 +5054,63 @@
         <p class="chat-text" style="margin-top:8px">${esc(x.body)}</p>
       </div>`;
     }).join('');
+  }
+
+  /* =====================================================
+     Vorschau-Bild / -Video: Einzelbilder erzeugen, Anzeige
+     ===================================================== */
+  function imageToJpeg(src, maxSide) {
+    const sw = src.videoWidth || src.naturalWidth || src.width;
+    const sh = src.videoHeight || src.naturalHeight || src.height;
+    const k = Math.min(1, maxSide / Math.max(sw, sh));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(sw * k));
+    c.height = Math.max(1, Math.round(sh * k));
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.8);
+  }
+  async function extractFrames(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      if (file.type.startsWith('image/')) {
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+        return [imageToJpeg(img, 1024)];
+      }
+      const v = document.createElement('video');
+      v.muted = true;
+      v.preload = 'auto';
+      v.src = url;
+      await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video')); });
+      const d = (isFinite(v.duration) && v.duration > 0) ? v.duration : 1;
+      const frames = [];
+      for (const f of [0.05, 0.25, 0.5, 0.75, 0.95]) {
+        const tm = Math.max(0, Math.min(d - 0.05, f * d));
+        await new Promise(res => { v.onseeked = res; v.currentTime = tm; });
+        frames.push(imageToJpeg(v, 512));
+      }
+      return frames;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  function mediaHtml(m) {
+    if (!m.mediaPath) return '';
+    return `<div class="media-box" data-media-id="${esc(m.id)}" style="margin-top:14px"><p class="hint">${esc(t('media.loading'))}</p></div>`
+      + (m.mediaNote ? `<p class="hint" style="margin-top:6px">🛡 ${esc(m.mediaNote)}</p>` : '');
+  }
+  async function loadMediaEls() {
+    for (const el of document.querySelectorAll('[data-media-id]')) {
+      const m = findMod(el.dataset.mediaId);
+      if (!m || !m.mediaPath || el.dataset.loaded) continue;
+      el.dataset.loaded = '1';
+      const { data, error } = await sb.storage.from('mods').createSignedUrl(m.mediaPath, 3600);
+      if (error || !data) { el.innerHTML = `<p class="hint">${esc(t('media.errLoad'))}</p>`; continue; }
+      el.innerHTML = m.mediaType === 'video'
+        ? `<video controls playsinline src="${esc(data.signedUrl)}" style="width:100%;border-radius:14px"></video>`
+        : `<img src="${esc(data.signedUrl)}" alt="" style="width:100%;border-radius:14px">`;
+    }
   }
 
   let adminTab = 'overview';
