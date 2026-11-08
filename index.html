@@ -3795,7 +3795,7 @@
               <div class="field"><label for="f_sum">${esc(t('upload.summary'))}</label><input id="f_sum" maxlength="120" placeholder="${esc(t('upload.summaryPh'))}"></div>
               <div class="row">
                 <div class="field"><label for="f_loader">${esc(t('upload.loader'))}</label><select id="f_loader">${opts(LOADERS)}</select></div>
-                <div class="field"><label for="f_ver">${esc(t('upload.version'))}</label><select id="f_ver">${opts([...VERSIONS].reverse())}</select></div>
+                <div class="field"><label for="f_ver">${esc(t('upload.version'))}</label><select id="f_ver">${opts(VERSIONS)}</select></div>
               </div>
               <div class="field"><label for="f_desc">${esc(t('upload.description'))}</label><textarea id="f_desc" maxlength="5000" placeholder="${esc(t('upload.descPh'))}"></textarea></div>
               <div class="field">
@@ -3869,10 +3869,10 @@
               const raw = await r.text();
               let parsed = null;
               try { parsed = JSON.parse(raw); } catch (e2) { parsed = null; }
-              if (!r.ok || !parsed) throw new Error('nicht verfügbar');
+              if (!r.ok || !parsed) throw new Error(parsed && parsed.error ? parsed.error : ('HTTP ' + r.status));
               verdict = parsed;
             } catch (err) {
-              return showError('formErr', t('media.errUnavailable'));
+              return showError('formErr', t('media.errUnavailable') + ' (' + (err.message || err) + ')');
             }
             if (!verdict.ok) return showError('formErr', t('media.blocked', { r: verdict.reason || '—' }));
             mediaNote = verdict.reason || t('media.okNote');
@@ -3952,7 +3952,7 @@
             <form id="packForm" novalidate>
               <div class="field"><label for="p_name">${esc(t('modpack.name'))}</label><input id="p_name" maxlength="40" placeholder="${esc(t('modpack.namePh'))}"></div>
               <div class="row">
-                <div class="field"><label for="p_ver">${esc(t('upload.version'))}</label><select id="p_ver">${opts([...VERSIONS].reverse())}</select></div>
+                <div class="field"><label for="p_ver">${esc(t('upload.version'))}</label><select id="p_ver">${opts(VERSIONS)}</select></div>
                 <div class="field"><label for="p_loader">${esc(t('upload.loader'))}</label><select id="p_loader">${opts(LOADERS)}</select></div>
               </div>
               <div class="field"><label for="p_desc">${esc(t('modpack.desc'))}</label><input id="p_desc" maxlength="120"></div>
