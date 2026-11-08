@@ -364,8 +364,9 @@
   .chip{transition:transform .25s cubic-bezier(.2,.8,.2,1),background .3s,color .3s,box-shadow .3s,border-color .3s}
   .chip:hover{transform:translateY(-2px)}
   .chip:active{transform:scale(.96)}
-  .chips.scroll-x{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 2px 8px;max-width:100%;mask-image:linear-gradient(90deg,#000 92%,transparent)}
-  .chips.scroll-x::-webkit-scrollbar{display:none}
+  .chips.scroll-x{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:4px 2px 10px;max-width:100%}
+  .chips.scroll-x::-webkit-scrollbar{height:6px}
+.chips.scroll-x::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
   .chips.scroll-x .chip{flex-shrink:0;white-space:nowrap}
   .toolbar{align-items:center}
   .modcard{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;border:1px solid var(--border)}
@@ -401,8 +402,17 @@
   .vt-box{border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;background:var(--surface-glass)}
   .vt-box .insp-head{margin-bottom:6px}
   .review-item{animation:fadeUp .4s ease both}
+
+  /* ===== Filterleiste & Server ===== */
+  .filterbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 4px}
+  .filterbar .scroll-x{flex:1 1 320px;min-width:0}
+  .filterbar .select{flex-shrink:0}
+  .srv-card{display:flex;flex-direction:column;gap:10px}
+  /* Schriften für alle Sprachen */
+  body,button,input,select,textarea{font-family:"Noto Sans","Noto Sans Arabic","Noto Sans Bengali","Noto Sans Devanagari","Noto Sans JP","Noto Sans SC","Noto Nastaliq Urdu",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="blob b1"></div>
@@ -415,6 +425,7 @@
     <a href="#/" data-nav="home" data-i18n="nav.home">Entdecken</a>
     <a href="#/modpacks" data-nav="modpacks" data-i18n="nav.modpacks">Modpacks</a>
     <a href="#/upload" data-nav="upload" data-i18n="nav.upload">Hochladen</a>
+    <a href="#/servers" data-nav="servers" data-i18n="nav.servers">Server</a>
     <a href="#/reviews" data-nav="reviews" data-i18n="nav.reviews" class="hidden">Verifizierung</a>
     <a href="#/admin" data-nav="admin" data-i18n="nav.admin" class="hidden">Admin</a>
   </nav>
@@ -447,7 +458,7 @@
   const snapshots = new Map();
   const NAME_RE = /^[A-Za-z0-9_-]{3,16}$/;
   const DAY = 86400000;
-  const MAX_FILE = 3 * 1024 * 1024 * 1024; // 3 GiB Obergrenze pro Mod-Datei
+  const MAX_FILE = 50 * 1024 * 1024; // 3 GiB Obergrenze pro Mod-Datei
   const CATS = ['adventure', 'cursed', 'decoration', 'economy', 'equipment', 'food', 'game-mechanics', 'library', 'magic', 'management', 'minigame', 'mobs', 'optimization', 'social', 'storage', 'technology', 'transportation', 'utility', 'world-generation'];
   const LOADERS = ['Fabric', 'Forge', 'NeoForge', 'Quilt'];
   // Unterstützte Minecraft-Versionen (älteste zuerst bis zur neuesten gewünschten Version).
@@ -461,7 +472,7 @@
     '26.1','26.1.1','26.1.2','26.2','26.3'
   ];
   const THEMES = ['aqua', 'ocean', 'mint', 'night'];
-  const LANGS = ['de', 'en', 'fr', 'es', 'pt', 'pl', 'tr', 'nl'];
+  const LANGS = ['de', 'en', 'zh', 'hi', 'es', 'fr', 'ar', 'bn', 'pt', 'ru', 'ur', 'id', 'ja', 'pcm', 'mr', 'pl', 'tr', 'nl'];
   const CAT_SVG = {
     adventure: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>',
     cursed: '<svg viewBox="0 0 24 24"><rect x="8" y="7" width="8" height="12" rx="4"/><path d="M9 7V5a3 3 0 0 1 6 0v2M4 12h4M16 12h4M4 17l3-1M20 17l-3-1M4 7l3 1M20 7l-3 1"/></svg>',
@@ -515,6 +526,51 @@
      ===================================================== */
   const I18N = {
     de: {
+      'home.allVersions': "Alle Versionen",
+      'admin.noAccess': "Kein Zugriff auf das Admin-Menü.",
+      'nav.servers': "Server",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Ressource Pack",
+      'type.shader': "Shader",
+      'env.client': "Client",
+      'env.server': "Server",
+      'env.both': "Client & Server",
+      'filter.type': "Typ",
+      'filter.env': "Umgebung",
+      'filter.allTypes': "Alle Typen",
+      'filter.allEnv': "Alle",
+      'upload.type': "Typ",
+      'upload.env': "Umgebung",
+      'upload.errTypeFor': "Für diesen Typ sind nur {types} erlaubt.",
+      'modpack.pluginsSkipped': "{n} Plugin(s) wurden nicht übernommen (sie gehören auf den Server).",
+      'servers.title': "Server",
+      'servers.sub': "Trag deinen Server ein. Ein Admin prüft ihn und kann ihn promoten.",
+      'servers.promoted': "Promotet",
+      'servers.list': "Alle Server",
+      'servers.add': "Server eintragen",
+      'servers.name': "Servername",
+      'servers.address': "Adresse (IP oder Domain)",
+      'servers.version': "Minecraft-Version",
+      'servers.website': "Webseite (optional)",
+      'servers.desc': "Beschreibung",
+      'servers.submit': "Zur Freigabe einreichen",
+      'servers.mine': "Meine Server",
+      'servers.none': "Noch keine Server eingetragen.",
+      'servers.submitted': "Eingereicht! Ein Admin prüft den Server.",
+      'servers.promoAsk': "Promotion anfragen",
+      'servers.promoSent': "Promotion angefragt. Ein Admin entscheidet.",
+      'servers.promoBadge': "Promotet",
+      'servers.copy': "Adresse kopieren",
+      'servers.empty': "Keine Server gefunden.",
+      'servers.errAddr': "Bitte eine gültige Adresse eingeben.",
+      'admin.tabServers': "Server",
+      'admin.srvPending': "Zu prüfen",
+      'admin.srvRequests': "Promotion-Anfragen",
+      'admin.srvPromoted': "Promotet",
+      'admin.srvPromote': "Promoten",
+      'admin.srvUnpromote': "Promotion beenden",
+      'admin.srvEmpty': "Nichts zu tun.",
       'nav.reviews': "Verifizierung",
       'reviews.title': "Meine Verifizierungen",
       'reviews.sub': "Hier siehst du den Status deiner eingereichten Mods, Ablehnungsgründe und den Chat mit dem Admin.",
@@ -668,12 +724,12 @@
       'upload.loader': 'Loader', 'upload.version': 'Minecraft-Version',
       'upload.description': 'Ausführliche Beschreibung', 'upload.descPh': 'Was kann deine Mod? Wie wird sie benutzt?',
       'upload.link': 'Download-Link (optional)', 'upload.linkHint': 'Nur Links mit https:// sind erlaubt.',
-      'upload.file': 'Mod-Datei hochladen (optional)', 'upload.fileHint': 'Nur .jar-Dateien, maximal 3 GB. Speicherung im Browser – abhängig vom verfügbaren Speicherplatz.',
+      'upload.file': 'Mod-Datei hochladen (optional)', 'upload.fileHint': 'Nur .jar-Dateien, maximal 50 MB. Speicherung im Browser – abhängig vom verfügbaren Speicherplatz.',
       'upload.or': 'Mindestens ein Download-Link oder eine Datei ist nötig.',
       'upload.submit': 'Zur Verifizierung einreichen',
       'upload.errName': 'Der Name braucht mindestens 3 Zeichen.', 'upload.errSummary': 'Die Kurzbeschreibung braucht mindestens 10 Zeichen.',
       'upload.errLink': 'Der Download-Link muss mit https:// beginnen.', 'upload.errSource': 'Bitte gib einen Download-Link an oder lade eine Datei hoch.',
-      'upload.errType': 'Nur .jar-Dateien sind erlaubt.', 'upload.errSize': 'Die Datei ist größer als 3 GB.',
+      'upload.errType': 'Nur .jar-Dateien sind erlaubt.', 'upload.errSize': 'Die Datei ist größer als 50 MB.',
       'upload.errStorage': 'Die Datei konnte in diesem Browser nicht gespeichert werden. Nutze stattdessen einen Download-Link.',
       'upload.submittedPending': 'Eingereicht! Ein Admin muss die Mod erst verifizieren.',
       'upload.submittedAdmin': 'Veröffentlicht! Als Admin wird deine Mod direkt freigegeben.',
@@ -731,6 +787,51 @@
       'notfound.title': 'Seite nicht gefunden', 'notfound.link': 'Zur Startseite'
     },
     en: {
+      'home.allVersions': "All versions",
+      'admin.noAccess': "No access to the admin menu.",
+      'nav.servers': "Servers",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Resource pack",
+      'type.shader': "Shader",
+      'env.client': "Client",
+      'env.server': "Server",
+      'env.both': "Client & server",
+      'filter.type': "Type",
+      'filter.env': "Environment",
+      'filter.allTypes': "All types",
+      'filter.allEnv': "All",
+      'upload.type': "Type",
+      'upload.env': "Environment",
+      'upload.errTypeFor': "Only {types} are allowed for this type.",
+      'modpack.pluginsSkipped': "{n} plugin(s) were not included (they belong on the server).",
+      'servers.title': "Servers",
+      'servers.sub': "Add your server. An admin reviews it and can promote it.",
+      'servers.promoted': "Promoted",
+      'servers.list': "All servers",
+      'servers.add': "Add server",
+      'servers.name': "Server name",
+      'servers.address': "Address (IP or domain)",
+      'servers.version': "Minecraft version",
+      'servers.website': "Website (optional)",
+      'servers.desc': "Description",
+      'servers.submit': "Submit for approval",
+      'servers.mine': "My servers",
+      'servers.none': "No servers added yet.",
+      'servers.submitted': "Submitted! An admin will review the server.",
+      'servers.promoAsk': "Request promotion",
+      'servers.promoSent': "Promotion requested. An admin decides.",
+      'servers.promoBadge': "Promoted",
+      'servers.copy': "Copy address",
+      'servers.empty': "No servers found.",
+      'servers.errAddr': "Please enter a valid address.",
+      'admin.tabServers': "Servers",
+      'admin.srvPending': "To review",
+      'admin.srvRequests': "Promotion requests",
+      'admin.srvPromoted': "Promoted",
+      'admin.srvPromote': "Promote",
+      'admin.srvUnpromote': "End promotion",
+      'admin.srvEmpty': "Nothing to do.",
       'nav.reviews': "Review",
       'reviews.title': "My reviews",
       'reviews.sub': "Here you see the status of your submitted mods, rejection reasons and the chat with the admin.",
@@ -884,12 +985,12 @@
       'upload.loader': 'Loader', 'upload.version': 'Minecraft version',
       'upload.description': 'Detailed description', 'upload.descPh': 'What does your mod do? How is it used?',
       'upload.link': 'Download link (optional)', 'upload.linkHint': 'Only https:// links are allowed.',
-      'upload.file': 'Upload mod file (optional)', 'upload.fileHint': 'Only .jar files, up to 3 GB. Stored in your browser, subject to available storage.',
+      'upload.file': 'Upload mod file (optional)', 'upload.fileHint': 'Only .jar files, up to 50 MB. Stored in your browser, subject to available storage.',
       'upload.or': 'At least one download link or one file is required.',
       'upload.submit': 'Submit for verification',
       'upload.errName': 'The name needs at least 3 characters.', 'upload.errSummary': 'The short summary needs at least 10 characters.',
       'upload.errLink': 'The download link must start with https://.', 'upload.errSource': 'Please provide a download link or upload a file.',
-      'upload.errType': 'Only .jar files are allowed.', 'upload.errSize': 'The file is larger than 3 GB.',
+      'upload.errType': 'Only .jar files are allowed.', 'upload.errSize': 'The file is larger than 50 MB.',
       'upload.errStorage': 'The file could not be saved in this browser. Please use a download link instead.',
       'upload.submittedPending': 'Submitted! An admin has to verify the mod first.',
       'upload.submittedAdmin': 'Published! As an admin, your mod is approved immediately.',
@@ -947,6 +1048,51 @@
       'notfound.title': 'Page not found', 'notfound.link': 'Go to home'
     },
     fr: {
+      'home.allVersions': "Toutes les versions",
+      'admin.noAccess': "Pas d'accès au menu admin.",
+      'nav.servers': "Serveurs",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Pack de ressources",
+      'type.shader': "Shader",
+      'env.client': "Client",
+      'env.server': "Serveur",
+      'env.both': "Client et serveur",
+      'filter.type': "Type",
+      'filter.env': "Environnement",
+      'filter.allTypes': "Tous les types",
+      'filter.allEnv': "Tous",
+      'upload.type': "Type",
+      'upload.env': "Environnement",
+      'upload.errTypeFor': "Seuls {types} sont autorisés pour ce type.",
+      'modpack.pluginsSkipped': "{n} plugin(s) non inclus (ils vont sur le serveur).",
+      'servers.title': "Serveurs",
+      'servers.sub': "Ajoute ton serveur. Un admin le vérifie et peut le mettre en avant.",
+      'servers.promoted': "Mis en avant",
+      'servers.list': "Tous les serveurs",
+      'servers.add': "Ajouter un serveur",
+      'servers.name': "Nom du serveur",
+      'servers.address': "Adresse (IP ou domaine)",
+      'servers.version': "Version de Minecraft",
+      'servers.website': "Site web (facultatif)",
+      'servers.desc': "Description",
+      'servers.submit': "Envoyer pour validation",
+      'servers.mine': "Mes serveurs",
+      'servers.none': "Aucun serveur ajouté pour l'instant.",
+      'servers.submitted': "Envoyé ! Un admin va vérifier le serveur.",
+      'servers.promoAsk': "Demander une mise en avant",
+      'servers.promoSent': "Mise en avant demandée. Un admin décide.",
+      'servers.promoBadge': "Mis en avant",
+      'servers.copy': "Copier l'adresse",
+      'servers.empty': "Aucun serveur trouvé.",
+      'servers.errAddr': "Saisis une adresse valide.",
+      'admin.tabServers': "Serveurs",
+      'admin.srvPending': "À vérifier",
+      'admin.srvRequests': "Demandes de mise en avant",
+      'admin.srvPromoted': "Mis en avant",
+      'admin.srvPromote': "Mettre en avant",
+      'admin.srvUnpromote': "Arrêter la mise en avant",
+      'admin.srvEmpty': "Rien à faire.",
       'nav.reviews': "Vérification",
       'reviews.title': "Mes vérifications",
       'reviews.sub': "Ici tu vois l'état de tes mods envoyés, les motifs de refus et le chat avec l'admin.",
@@ -1065,6 +1211,51 @@
       'lang.de':'Allemand','lang.en':'Anglais','lang.fr':'Français','lang.es':'Espagnol','lang.pt':'Portugais','lang.pl':'Polonais','lang.tr':'Turc','lang.nl':'Néerlandais'
     },
     es: {
+      'home.allVersions': "Todas las versiones",
+      'admin.noAccess': "Sin acceso al menú de admin.",
+      'nav.servers': "Servidores",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Paquete de recursos",
+      'type.shader': "Shader",
+      'env.client': "Cliente",
+      'env.server': "Servidor",
+      'env.both': "Cliente y servidor",
+      'filter.type': "Tipo",
+      'filter.env': "Entorno",
+      'filter.allTypes': "Todos los tipos",
+      'filter.allEnv': "Todos",
+      'upload.type': "Tipo",
+      'upload.env': "Entorno",
+      'upload.errTypeFor': "Solo se permiten {types} para este tipo.",
+      'modpack.pluginsSkipped': "{n} plugin(s) no incluidos (van en el servidor).",
+      'servers.title': "Servidores",
+      'servers.sub': "Añade tu servidor. Un admin lo revisa y puede promocionarlo.",
+      'servers.promoted': "Destacados",
+      'servers.list': "Todos los servidores",
+      'servers.add': "Añadir servidor",
+      'servers.name': "Nombre del servidor",
+      'servers.address': "Dirección (IP o dominio)",
+      'servers.version': "Versión de Minecraft",
+      'servers.website': "Sitio web (opcional)",
+      'servers.desc': "Descripción",
+      'servers.submit': "Enviar para aprobación",
+      'servers.mine': "Mis servidores",
+      'servers.none': "Todavía no has añadido servidores.",
+      'servers.submitted': "¡Enviado! Un admin revisará el servidor.",
+      'servers.promoAsk': "Pedir promoción",
+      'servers.promoSent': "Promoción solicitada. Decide un admin.",
+      'servers.promoBadge': "Destacado",
+      'servers.copy': "Copiar dirección",
+      'servers.empty': "No se encontraron servidores.",
+      'servers.errAddr': "Introduce una dirección válida.",
+      'admin.tabServers': "Servidores",
+      'admin.srvPending': "Por revisar",
+      'admin.srvRequests': "Solicitudes de promoción",
+      'admin.srvPromoted': "Destacados",
+      'admin.srvPromote': "Promocionar",
+      'admin.srvUnpromote': "Quitar promoción",
+      'admin.srvEmpty': "Nada que hacer.",
       'nav.reviews': "Verificación",
       'reviews.title': "Mis verificaciones",
       'reviews.sub': "Aquí ves el estado de tus mods enviados, los motivos de rechazo y el chat con el admin.",
@@ -1183,6 +1374,51 @@
       'lang.de':'Alemán','lang.en':'Inglés','lang.fr':'Francés','lang.es':'Español','lang.pt':'Portugués','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandés'
     },
     pt: {
+      'home.allVersions': "Todas as versões",
+      'admin.noAccess': "Sem acesso ao menu admin.",
+      'nav.servers': "Servidores",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Pacote de recursos",
+      'type.shader': "Shader",
+      'env.client': "Cliente",
+      'env.server': "Servidor",
+      'env.both': "Cliente e servidor",
+      'filter.type': "Tipo",
+      'filter.env': "Ambiente",
+      'filter.allTypes': "Todos os tipos",
+      'filter.allEnv': "Todos",
+      'upload.type': "Tipo",
+      'upload.env': "Ambiente",
+      'upload.errTypeFor': "Só são permitidos {types} para este tipo.",
+      'modpack.pluginsSkipped': "{n} plugin(s) não incluídos (vão no servidor).",
+      'servers.title': "Servidores",
+      'servers.sub': "Adicione seu servidor. Um admin o revisa e pode promovê-lo.",
+      'servers.promoted': "Em destaque",
+      'servers.list': "Todos os servidores",
+      'servers.add': "Adicionar servidor",
+      'servers.name': "Nome do servidor",
+      'servers.address': "Endereço (IP ou domínio)",
+      'servers.version': "Versão do Minecraft",
+      'servers.website': "Site (opcional)",
+      'servers.desc': "Descrição",
+      'servers.submit': "Enviar para aprovação",
+      'servers.mine': "Meus servidores",
+      'servers.none': "Nenhum servidor adicionado ainda.",
+      'servers.submitted': "Enviado! Um admin vai revisar o servidor.",
+      'servers.promoAsk': "Pedir promoção",
+      'servers.promoSent': "Promoção solicitada. Um admin decide.",
+      'servers.promoBadge': "Em destaque",
+      'servers.copy': "Copiar endereço",
+      'servers.empty': "Nenhum servidor encontrado.",
+      'servers.errAddr': "Digite um endereço válido.",
+      'admin.tabServers': "Servidores",
+      'admin.srvPending': "Para revisar",
+      'admin.srvRequests': "Pedidos de promoção",
+      'admin.srvPromoted': "Em destaque",
+      'admin.srvPromote': "Promover",
+      'admin.srvUnpromote': "Encerrar promoção",
+      'admin.srvEmpty': "Nada a fazer.",
       'nav.reviews': "Verificação",
       'reviews.title': "Minhas verificações",
       'reviews.sub': "Aqui você vê o status dos seus mods enviados, os motivos de recusa e o chat com o admin.",
@@ -1301,6 +1537,51 @@
       'lang.de':'Alemão','lang.en':'Inglês','lang.fr':'Francês','lang.es':'Espanhol','lang.pt':'Português','lang.pl':'Polaco','lang.tr':'Turco','lang.nl':'Neerlandês'
     },
     pl: {
+      'home.allVersions': "Wszystkie wersje",
+      'admin.noAccess': "Brak dostępu do menu admina.",
+      'nav.servers': "Serwery",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Paczka zasobów",
+      'type.shader': "Shader",
+      'env.client': "Klient",
+      'env.server': "Serwer",
+      'env.both': "Klient i serwer",
+      'filter.type': "Typ",
+      'filter.env': "Środowisko",
+      'filter.allTypes': "Wszystkie typy",
+      'filter.allEnv': "Wszystkie",
+      'upload.type': "Typ",
+      'upload.env': "Środowisko",
+      'upload.errTypeFor': "Dla tego typu dozwolone są tylko {types}.",
+      'modpack.pluginsSkipped': "Nie dodano {n} wtyczek (są dla serwera).",
+      'servers.title': "Serwery",
+      'servers.sub': "Dodaj swój serwer. Admin go sprawdzi i może promować.",
+      'servers.promoted': "Promowane",
+      'servers.list': "Wszystkie serwery",
+      'servers.add': "Dodaj serwer",
+      'servers.name': "Nazwa serwera",
+      'servers.address': "Adres (IP lub domena)",
+      'servers.version': "Wersja Minecraft",
+      'servers.website': "Strona (opcjonalnie)",
+      'servers.desc': "Opis",
+      'servers.submit': "Wyślij do zatwierdzenia",
+      'servers.mine': "Moje serwery",
+      'servers.none': "Nie dodano jeszcze serwerów.",
+      'servers.submitted': "Wysłano! Admin sprawdzi serwer.",
+      'servers.promoAsk': "Poproś o promocję",
+      'servers.promoSent': "Zgłoszono promocję. Decyduje admin.",
+      'servers.promoBadge': "Promowany",
+      'servers.copy': "Kopiuj adres",
+      'servers.empty': "Nie znaleziono serwerów.",
+      'servers.errAddr': "Wpisz poprawny adres.",
+      'admin.tabServers': "Serwery",
+      'admin.srvPending': "Do sprawdzenia",
+      'admin.srvRequests': "Zgłoszenia promocji",
+      'admin.srvPromoted': "Promowane",
+      'admin.srvPromote': "Promuj",
+      'admin.srvUnpromote': "Zakończ promocję",
+      'admin.srvEmpty': "Nic do zrobienia.",
       'nav.reviews': "Weryfikacja",
       'reviews.title': "Moje weryfikacje",
       'reviews.sub': "Tutaj widzisz status przesłanych modów, powody odrzucenia i czat z adminem.",
@@ -1419,6 +1700,51 @@
       'lang.de':'Niemiecki','lang.en':'Angielski','lang.fr':'Francuski','lang.es':'Hiszpański','lang.pt':'Portugalski','lang.pl':'Polski','lang.tr':'Turecki','lang.nl':'Niderlandzki'
     },
     tr: {
+      'home.allVersions': "Tüm sürümler",
+      'admin.noAccess': "Yönetici menüsüne erişim yok.",
+      'nav.servers': "Sunucular",
+      'type.mod': "Mod",
+      'type.plugin': "Eklenti",
+      'type.resourcepack': "Kaynak paketi",
+      'type.shader': "Shader",
+      'env.client': "İstemci",
+      'env.server': "Sunucu",
+      'env.both': "İstemci ve sunucu",
+      'filter.type': "Tür",
+      'filter.env': "Ortam",
+      'filter.allTypes': "Tüm türler",
+      'filter.allEnv': "Tümü",
+      'upload.type': "Tür",
+      'upload.env': "Ortam",
+      'upload.errTypeFor': "Bu tür için yalnızca {types} dosyalarına izin verilir.",
+      'modpack.pluginsSkipped': "{n} eklenti dahil edilmedi (sunucuya aittir).",
+      'servers.title': "Sunucular",
+      'servers.sub': "Sunucunu ekle. Bir yönetici inceler ve öne çıkarabilir.",
+      'servers.promoted': "Öne çıkanlar",
+      'servers.list': "Tüm sunucular",
+      'servers.add': "Sunucu ekle",
+      'servers.name': "Sunucu adı",
+      'servers.address': "Adres (IP veya alan adı)",
+      'servers.version': "Minecraft sürümü",
+      'servers.website': "Web sitesi (isteğe bağlı)",
+      'servers.desc': "Açıklama",
+      'servers.submit': "Onay için gönder",
+      'servers.mine': "Sunucularım",
+      'servers.none': "Henüz sunucu eklenmedi.",
+      'servers.submitted': "Gönderildi! Bir yönetici sunucuyu inceleyecek.",
+      'servers.promoAsk': "Öne çıkarma talep et",
+      'servers.promoSent': "Öne çıkarma talebi gönderildi. Bir yönetici karar verir.",
+      'servers.promoBadge': "Öne çıkan",
+      'servers.copy': "Adresi kopyala",
+      'servers.empty': "Sunucu bulunamadı.",
+      'servers.errAddr': "Geçerli bir adres gir.",
+      'admin.tabServers': "Sunucular",
+      'admin.srvPending': "İncelenecek",
+      'admin.srvRequests': "Öne çıkarma talepleri",
+      'admin.srvPromoted': "Öne çıkanlar",
+      'admin.srvPromote': "Öne çıkar",
+      'admin.srvUnpromote': "Öne çıkarmayı kaldır",
+      'admin.srvEmpty': "Yapılacak bir şey yok.",
       'nav.reviews': "Doğrulama",
       'reviews.title': "Doğrulamalarım",
       'reviews.sub': "Burada gönderdiğin modların durumunu, red nedenlerini ve yöneticiyle sohbeti görürsün.",
@@ -1537,6 +1863,51 @@
       'lang.de':'Almanca','lang.en':'İngilizce','lang.fr':'Fransızca','lang.es':'İspanyolca','lang.pt':'Portekizce','lang.pl':'Lehçe','lang.tr':'Türkçe','lang.nl':'Felemenkçe'
     },
     nl: {
+      'home.allVersions': "Alle versies",
+      'admin.noAccess': "Geen toegang tot het adminmenu.",
+      'nav.servers': "Servers",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Resourcepack",
+      'type.shader': "Shader",
+      'env.client': "Client",
+      'env.server': "Server",
+      'env.both': "Client en server",
+      'filter.type': "Type",
+      'filter.env': "Omgeving",
+      'filter.allTypes': "Alle types",
+      'filter.allEnv': "Alle",
+      'upload.type': "Type",
+      'upload.env': "Omgeving",
+      'upload.errTypeFor': "Voor dit type zijn alleen {types} toegestaan.",
+      'modpack.pluginsSkipped': "{n} plugin(s) niet opgenomen (horen op de server).",
+      'servers.title': "Servers",
+      'servers.sub': "Voeg je server toe. Een admin controleert hem en kan hem promoten.",
+      'servers.promoted': "Gepromoot",
+      'servers.list': "Alle servers",
+      'servers.add': "Server toevoegen",
+      'servers.name': "Servernaam",
+      'servers.address': "Adres (IP of domein)",
+      'servers.version': "Minecraft-versie",
+      'servers.website': "Website (optioneel)",
+      'servers.desc': "Beschrijving",
+      'servers.submit': "Indienen ter goedkeuring",
+      'servers.mine': "Mijn servers",
+      'servers.none': "Nog geen servers toegevoegd.",
+      'servers.submitted': "Ingediend! Een admin controleert de server.",
+      'servers.promoAsk': "Promotie aanvragen",
+      'servers.promoSent': "Promotie aangevraagd. Een admin beslist.",
+      'servers.promoBadge': "Gepromoot",
+      'servers.copy': "Adres kopiëren",
+      'servers.empty': "Geen servers gevonden.",
+      'servers.errAddr': "Vul een geldig adres in.",
+      'admin.tabServers': "Servers",
+      'admin.srvPending': "Te controleren",
+      'admin.srvRequests': "Promotieverzoeken",
+      'admin.srvPromoted': "Gepromoot",
+      'admin.srvPromote': "Promoten",
+      'admin.srvUnpromote': "Promotie beëindigen",
+      'admin.srvEmpty': "Niets te doen.",
       'nav.reviews': "Verificatie",
       'reviews.title': "Mijn verificaties",
       'reviews.sub': "Hier zie je de status van je ingediende mods, de redenen van afwijzing en de chat met de admin.",
@@ -1654,7 +2025,687 @@
       'settings.title':'Instellingen','settings.subtitle':'Pas het uiterlijk en de taal aan.','settings.theme':'Uiterlijk','settings.language':'Taal','settings.saved':'Instellingen opgeslagen.',
       'lang.de':'Duits','lang.en':'Engels','lang.fr':'Frans','lang.es':'Spaans','lang.pt':'Portugees','lang.pl':'Pools','lang.tr':'Turks','lang.nl':'Nederlands'
     }
-
+,
+    zh: {
+      'nav.home': "发现",
+      'nav.modpacks': "模组包",
+      'nav.upload': "上传",
+      'nav.servers': "服务器",
+      'nav.settings': "设置",
+      'auth.login': "登录",
+      'auth.register': "注册",
+      'auth.logout': "退出登录",
+      'auth.username': "用户名",
+      'auth.password': "密码",
+      'auth.submitLogin': "登录",
+      'home.h1a': "最好的模组。",
+      'home.h1b': "流畅又简单。",
+      'home.sub': "在一个地方发现、下载和分享你的 Minecraft 模组。",
+      'home.search': "搜索模组、作者或关键词…",
+      'home.sort.popular': "热门",
+      'home.sort.new': "最新",
+      'cat.all': "全部",
+      'cat.adventure': "冒险",
+      'cat.cursed': "诅咒",
+      'cat.decoration': "装饰",
+      'cat.economy': "经济",
+      'cat.equipment': "装备",
+      'cat.food': "食物",
+      'cat.game-mechanics': "游戏机制",
+      'cat.library': "库",
+      'cat.magic': "魔法",
+      'cat.management': "管理",
+      'cat.minigame': "小游戏",
+      'cat.mobs': "生物",
+      'cat.optimization': "优化",
+      'cat.social': "社交",
+      'cat.storage': "存储",
+      'cat.technology': "科技",
+      'cat.transportation': "交通",
+      'cat.utility': "实用工具",
+      'cat.world-generation': "世界生成",
+      'type.mod': "模组",
+      'type.plugin': "插件",
+      'type.resourcepack': "资源包",
+      'type.shader': "光影",
+      'env.client': "客户端",
+      'env.server': "服务端",
+      'env.both': "客户端与服务端",
+      'upload.title': "上传模组",
+      'upload.name': "名称",
+      'upload.category': "分类",
+      'upload.submit': "提交审核",
+      'upload.type': "类型",
+      'settings.title': "设置",
+      'settings.theme': "外观",
+      'settings.language': "语言",
+      'theme.aqua': "水蓝",
+      'theme.ocean': "海洋",
+      'theme.mint': "薄荷",
+      'theme.night': "夜晚",
+      'modpack.new': "新建模组包",
+      'servers.add': "添加服务器",
+      'reviews.title': "我的审核",
+      'mod.download': "↓ 下载",
+      'status.approved': "已验证",
+      'status.pending': "等待验证",
+      'status.rejected': "已拒绝",
+      'err.generic': "出了点问题，请重试。",
+      'notfound.title': "页面未找到",
+      'notfound.link': "返回首页",
+    },
+    hi: {
+      'nav.home': "खोजें",
+      'nav.modpacks': "मॉडपैक",
+      'nav.upload': "अपलोड",
+      'nav.servers': "सर्वर",
+      'nav.settings': "सेटिंग्स",
+      'auth.login': "लॉग इन",
+      'auth.register': "रजिस्टर करें",
+      'auth.logout': "लॉग आउट",
+      'auth.username': "उपयोगकर्ता नाम",
+      'auth.password': "पासवर्ड",
+      'auth.submitLogin': "लॉग इन करें",
+      'home.h1a': "सबसे अच्छे मॉड्स।",
+      'home.h1b': "स्मूथ और आसान।",
+      'home.sub': "अपने Minecraft मॉड्स खोजें, डाउनलोड करें और साझा करें – सब एक ही जगह।",
+      'home.search': "मॉड्स, लेखक या कीवर्ड खोजें…",
+      'home.sort.popular': "लोकप्रिय",
+      'home.sort.new': "नए",
+      'cat.all': "सभी",
+      'cat.adventure': "रोमांच",
+      'cat.cursed': "श्रापित",
+      'cat.decoration': "सजावट",
+      'cat.economy': "अर्थव्यवस्था",
+      'cat.equipment': "उपकरण",
+      'cat.food': "भोजन",
+      'cat.game-mechanics': "गेम मैकेनिक्स",
+      'cat.library': "लाइब्रेरी",
+      'cat.magic': "जादू",
+      'cat.management': "प्रबंधन",
+      'cat.minigame': "मिनीगेम",
+      'cat.mobs': "मॉब्स",
+      'cat.optimization': "ऑप्टिमाइज़ेशन",
+      'cat.social': "सोशल",
+      'cat.storage': "स्टोरेज",
+      'cat.technology': "तकनीक",
+      'cat.transportation': "परिवहन",
+      'cat.utility': "यूटिलिटी",
+      'cat.world-generation': "वर्ल्ड जनरेशन",
+      'type.mod': "मॉड",
+      'type.plugin': "प्लगइन",
+      'type.resourcepack': "रिसोर्स पैक",
+      'type.shader': "शेडर",
+      'env.client': "क्लाइंट",
+      'env.server': "सर्वर",
+      'env.both': "क्लाइंट और सर्वर",
+      'upload.title': "मॉड अपलोड करें",
+      'upload.name': "नाम",
+      'upload.category': "श्रेणी",
+      'upload.submit': "सत्यापन के लिए भेजें",
+      'upload.type': "प्रकार",
+      'settings.title': "सेटिंग्स",
+      'settings.theme': "रूप",
+      'settings.language': "भाषा",
+      'theme.aqua': "एक्वा",
+      'theme.ocean': "महासागर",
+      'theme.mint': "मिंट",
+      'theme.night': "रात",
+      'modpack.new': "नया मॉडपैक",
+      'servers.add': "सर्वर जोड़ें",
+      'reviews.title': "मेरे सत्यापन",
+      'mod.download': "↓ डाउनलोड",
+      'status.approved': "सत्यापित",
+      'status.pending': "सत्यापन की प्रतीक्षा",
+      'status.rejected': "अस्वीकृत",
+      'err.generic': "कुछ गलत हो गया। कृपया फिर से कोशिश करें।",
+      'notfound.title': "पेज नहीं मिला",
+      'notfound.link': "होम पर जाएं",
+    },
+    ar: {
+      'nav.home': "استكشف",
+      'nav.modpacks': "حزم المودات",
+      'nav.upload': "رفع",
+      'nav.servers': "الخوادم",
+      'nav.settings': "الإعدادات",
+      'auth.login': "تسجيل الدخول",
+      'auth.register': "إنشاء حساب",
+      'auth.logout': "تسجيل الخروج",
+      'auth.username': "اسم المستخدم",
+      'auth.password': "كلمة المرور",
+      'auth.submitLogin': "دخول",
+      'home.h1a': "أفضل المودات.",
+      'home.h1b': "سلس وبسيط.",
+      'home.sub': "اكتشف مودات ماين كرافت وحمّلها وشاركها – كل شيء في مكان واحد.",
+      'home.search': "ابحث عن مودات أو مؤلفين أو كلمات مفتاحية…",
+      'home.sort.popular': "الأكثر شعبية",
+      'home.sort.new': "الأحدث",
+      'cat.all': "الكل",
+      'cat.adventure': "مغامرة",
+      'cat.cursed': "ملعون",
+      'cat.decoration': "ديكور",
+      'cat.economy': "اقتصاد",
+      'cat.equipment': "معدات",
+      'cat.food': "طعام",
+      'cat.game-mechanics': "آليات اللعب",
+      'cat.library': "مكتبة",
+      'cat.magic': "سحر",
+      'cat.management': "إدارة",
+      'cat.minigame': "ألعاب مصغرة",
+      'cat.mobs': "كائنات",
+      'cat.optimization': "تحسين الأداء",
+      'cat.social': "اجتماعي",
+      'cat.storage': "تخزين",
+      'cat.technology': "تقنية",
+      'cat.transportation': "مواصلات",
+      'cat.utility': "أدوات",
+      'cat.world-generation': "توليد العالم",
+      'type.mod': "مود",
+      'type.plugin': "إضافة",
+      'type.resourcepack': "حزمة موارد",
+      'type.shader': "شيدر",
+      'env.client': "عميل",
+      'env.server': "خادم",
+      'env.both': "عميل وخادم",
+      'upload.title': "رفع مود",
+      'upload.name': "الاسم",
+      'upload.category': "الفئة",
+      'upload.submit': "إرسال للتحقق",
+      'upload.type': "النوع",
+      'settings.title': "الإعدادات",
+      'settings.theme': "المظهر",
+      'settings.language': "اللغة",
+      'theme.aqua': "أكوا",
+      'theme.ocean': "محيط",
+      'theme.mint': "نعناع",
+      'theme.night': "ليلي",
+      'modpack.new': "حزمة مودات جديدة",
+      'servers.add': "إضافة خادم",
+      'reviews.title': "تحققاتي",
+      'mod.download': "↓ تنزيل",
+      'status.approved': "تم التحقق",
+      'status.pending': "بانتظار التحقق",
+      'status.rejected': "مرفوض",
+      'err.generic': "حدث خطأ ما. حاول مرة أخرى.",
+      'notfound.title': "الصفحة غير موجودة",
+      'notfound.link': "العودة للرئيسية",
+    },
+    bn: {
+      'nav.home': "আবিষ্কার করুন",
+      'nav.modpacks': "মডপ্যাক",
+      'nav.upload': "আপলোড",
+      'nav.servers': "সার্ভার",
+      'nav.settings': "সেটিংস",
+      'auth.login': "লগইন",
+      'auth.register': "নিবন্ধন",
+      'auth.logout': "লগআউট",
+      'auth.username': "ব্যবহারকারীর নাম",
+      'auth.password': "পাসওয়ার্ড",
+      'auth.submitLogin': "লগইন করুন",
+      'home.h1a': "সেরা মড।",
+      'home.h1b': "মসৃণ ও সহজ।",
+      'home.sub': "Minecraft মড খুঁজুন, ডাউনলোড করুন ও শেয়ার করুন – সব এক জায়গায়।",
+      'home.search': "মড, লেখক বা কিওয়ার্ড খুঁজুন…",
+      'home.sort.popular': "জনপ্রিয়",
+      'home.sort.new': "নতুন",
+      'cat.all': "সব",
+      'cat.adventure': "অ্যাডভেঞ্চার",
+      'cat.cursed': "অভিশপ্ত",
+      'cat.decoration': "সাজসজ্জা",
+      'cat.economy': "অর্থনীতি",
+      'cat.equipment': "সরঞ্জাম",
+      'cat.food': "খাবার",
+      'cat.game-mechanics': "গেম মেকানিক্স",
+      'cat.library': "লাইব্রেরি",
+      'cat.magic': "জাদু",
+      'cat.management': "ব্যবস্থাপনা",
+      'cat.minigame': "মিনিগেম",
+      'cat.mobs': "মবস",
+      'cat.optimization': "অপটিমাইজেশন",
+      'cat.social': "সামাজিক",
+      'cat.storage': "স্টোরেজ",
+      'cat.technology': "প্রযুক্তি",
+      'cat.transportation': "পরিবহন",
+      'cat.utility': "ইউটিলিটি",
+      'cat.world-generation': "ওয়ার্ল্ড জেনারেশন",
+      'type.mod': "মড",
+      'type.plugin': "প্লাগইন",
+      'type.resourcepack': "রিসোর্স প্যাক",
+      'type.shader': "শেডার",
+      'env.client': "ক্লায়েন্ট",
+      'env.server': "সার্ভার",
+      'env.both': "ক্লায়েন্ট ও সার্ভার",
+      'upload.title': "মড আপলোড করুন",
+      'upload.name': "নাম",
+      'upload.category': "বিভাগ",
+      'upload.submit': "যাচাইয়ের জন্য জমা দিন",
+      'upload.type': "ধরন",
+      'settings.title': "সেটিংস",
+      'settings.theme': "চেহারা",
+      'settings.language': "ভাষা",
+      'theme.aqua': "অ্যাকোয়া",
+      'theme.ocean': "মহাসাগর",
+      'theme.mint': "মিন্ট",
+      'theme.night': "রাত",
+      'modpack.new': "নতুন মডপ্যাক",
+      'servers.add': "সার্ভার যোগ করুন",
+      'reviews.title': "আমার যাচাই",
+      'mod.download': "↓ ডাউনলোড",
+      'status.approved': "যাচাই করা হয়েছে",
+      'status.pending': "যাচাইয়ের অপেক্ষায়",
+      'status.rejected': "প্রত্যাখ্যাত",
+      'err.generic': "কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।",
+      'notfound.title': "পেজ পাওয়া যায়নি",
+      'notfound.link': "হোমে যান",
+    },
+    ru: {
+      'nav.home': "Обзор",
+      'nav.modpacks': "Модпаки",
+      'nav.upload': "Загрузить",
+      'nav.servers': "Серверы",
+      'nav.settings': "Настройки",
+      'auth.login': "Войти",
+      'auth.register': "Регистрация",
+      'auth.logout': "Выйти",
+      'auth.username': "Имя пользователя",
+      'auth.password': "Пароль",
+      'auth.submitLogin': "Войти",
+      'home.h1a': "Лучшие моды.",
+      'home.h1b': "Просто и удобно.",
+      'home.sub': "Находите, скачивайте и делитесь модами для Minecraft – всё в одном месте.",
+      'home.search': "Поиск модов, авторов или ключевых слов…",
+      'home.sort.popular': "Популярные",
+      'home.sort.new': "Новые",
+      'cat.all': "Все",
+      'cat.adventure': "Приключения",
+      'cat.cursed': "Проклятые",
+      'cat.decoration': "Декор",
+      'cat.economy': "Экономика",
+      'cat.equipment': "Снаряжение",
+      'cat.food': "Еда",
+      'cat.game-mechanics': "Игровые механики",
+      'cat.library': "Библиотеки",
+      'cat.magic': "Магия",
+      'cat.management': "Управление",
+      'cat.minigame': "Мини-игры",
+      'cat.mobs': "Мобы",
+      'cat.optimization': "Оптимизация",
+      'cat.social': "Социальные",
+      'cat.storage': "Хранение",
+      'cat.technology': "Технологии",
+      'cat.transportation': "Транспорт",
+      'cat.utility': "Утилиты",
+      'cat.world-generation': "Генерация мира",
+      'type.mod': "Мод",
+      'type.plugin': "Плагин",
+      'type.resourcepack': "Ресурспак",
+      'type.shader': "Шейдер",
+      'env.client': "Клиент",
+      'env.server': "Сервер",
+      'env.both': "Клиент и сервер",
+      'upload.title': "Загрузить мод",
+      'upload.name': "Название",
+      'upload.category': "Категория",
+      'upload.submit': "Отправить на проверку",
+      'upload.type': "Тип",
+      'settings.title': "Настройки",
+      'settings.theme': "Оформление",
+      'settings.language': "Язык",
+      'theme.aqua': "Аква",
+      'theme.ocean': "Океан",
+      'theme.mint': "Мята",
+      'theme.night': "Ночь",
+      'modpack.new': "Новый модпак",
+      'servers.add': "Добавить сервер",
+      'reviews.title': "Мои проверки",
+      'mod.download': "↓ Скачать",
+      'status.approved': "Проверено",
+      'status.pending': "Ожидает проверки",
+      'status.rejected': "Отклонено",
+      'err.generic': "Что-то пошло не так. Попробуйте ещё раз.",
+      'notfound.title': "Страница не найдена",
+      'notfound.link': "На главную",
+    },
+    ur: {
+      'nav.home': "دریافت کریں",
+      'nav.modpacks': "ماڈ پیکس",
+      'nav.upload': "اپلوڈ",
+      'nav.servers': "سرورز",
+      'nav.settings': "ترتیبات",
+      'auth.login': "لاگ ان",
+      'auth.register': "رجسٹر کریں",
+      'auth.logout': "لاگ آؤٹ",
+      'auth.username': "صارف نام",
+      'auth.password': "پاس ورڈ",
+      'auth.submitLogin': "لاگ ان کریں",
+      'home.h1a': "بہترین ماڈز۔",
+      'home.h1b': "آسان اور ہموار۔",
+      'home.sub': "Minecraft ماڈز تلاش کریں، ڈاؤن لوڈ کریں اور شیئر کریں – سب ایک جگہ۔",
+      'home.search': "ماڈز، مصنفین یا کلیدی الفاظ تلاش کریں…",
+      'home.sort.popular': "مقبول",
+      'home.sort.new': "نئے",
+      'cat.all': "سب",
+      'cat.adventure': "مہم جوئی",
+      'cat.cursed': "ملعون",
+      'cat.decoration': "آرائش",
+      'cat.economy': "معیشت",
+      'cat.equipment': "سازوسامان",
+      'cat.food': "کھانا",
+      'cat.game-mechanics': "گیم میکینکس",
+      'cat.library': "لائبریری",
+      'cat.magic': "جادو",
+      'cat.management': "انتظام",
+      'cat.minigame': "منی گیم",
+      'cat.mobs': "موبز",
+      'cat.optimization': "بہتری",
+      'cat.social': "سماجی",
+      'cat.storage': "اسٹوریج",
+      'cat.technology': "ٹیکنالوجی",
+      'cat.transportation': "نقل و حمل",
+      'cat.utility': "افادیت",
+      'cat.world-generation': "دنیا کی تخلیق",
+      'type.mod': "ماڈ",
+      'type.plugin': "پلگ اِن",
+      'type.resourcepack': "ریسورس پیک",
+      'type.shader': "شیڈر",
+      'env.client': "کلائنٹ",
+      'env.server': "سرور",
+      'env.both': "کلائنٹ اور سرور",
+      'upload.title': "ماڈ اپلوڈ کریں",
+      'upload.name': "نام",
+      'upload.category': "زمرہ",
+      'upload.submit': "تصدیق کے لیے بھیجیں",
+      'upload.type': "قسم",
+      'settings.title': "ترتیبات",
+      'settings.theme': "انداز",
+      'settings.language': "زبان",
+      'theme.aqua': "ایکوا",
+      'theme.ocean': "سمندر",
+      'theme.mint': "پودینہ",
+      'theme.night': "رات",
+      'modpack.new': "نیا ماڈ پیک",
+      'servers.add': "سرور شامل کریں",
+      'reviews.title': "میری تصدیقات",
+      'mod.download': "↓ ڈاؤن لوڈ",
+      'status.approved': "تصدیق شدہ",
+      'status.pending': "تصدیق کا انتظار",
+      'status.rejected': "مسترد",
+      'err.generic': "کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔",
+      'notfound.title': "صفحہ نہیں ملا",
+      'notfound.link': "ہوم پر جائیں",
+    },
+    id: {
+      'nav.home': "Jelajahi",
+      'nav.modpacks': "Modpack",
+      'nav.upload': "Unggah",
+      'nav.servers': "Server",
+      'nav.settings': "Pengaturan",
+      'auth.login': "Masuk",
+      'auth.register': "Daftar",
+      'auth.logout': "Keluar",
+      'auth.username': "Nama pengguna",
+      'auth.password': "Kata sandi",
+      'auth.submitLogin': "Masuk",
+      'home.h1a': "Mod terbaik.",
+      'home.h1b': "Mulus & mudah.",
+      'home.sub': "Temukan, unduh, dan bagikan mod Minecraft – semua di satu tempat.",
+      'home.search': "Cari mod, penulis, atau kata kunci…",
+      'home.sort.popular': "Populer",
+      'home.sort.new': "Terbaru",
+      'cat.all': "Semua",
+      'cat.adventure': "Petualangan",
+      'cat.cursed': "Terkutuk",
+      'cat.decoration': "Dekorasi",
+      'cat.economy': "Ekonomi",
+      'cat.equipment': "Peralatan",
+      'cat.food': "Makanan",
+      'cat.game-mechanics': "Mekanik Permainan",
+      'cat.library': "Pustaka",
+      'cat.magic': "Sihir",
+      'cat.management': "Manajemen",
+      'cat.minigame': "Minigame",
+      'cat.mobs': "Mob",
+      'cat.optimization': "Optimalisasi",
+      'cat.social': "Sosial",
+      'cat.storage': "Penyimpanan",
+      'cat.technology': "Teknologi",
+      'cat.transportation': "Transportasi",
+      'cat.utility': "Utilitas",
+      'cat.world-generation': "Pembuatan Dunia",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Resource Pack",
+      'type.shader': "Shader",
+      'env.client': "Klien",
+      'env.server': "Server",
+      'env.both': "Klien & Server",
+      'upload.title': "Unggah mod",
+      'upload.name': "Nama",
+      'upload.category': "Kategori",
+      'upload.submit': "Kirim untuk verifikasi",
+      'upload.type': "Jenis",
+      'settings.title': "Pengaturan",
+      'settings.theme': "Tampilan",
+      'settings.language': "Bahasa",
+      'theme.aqua': "Aqua",
+      'theme.ocean': "Samudra",
+      'theme.mint': "Mint",
+      'theme.night': "Malam",
+      'modpack.new': "Modpack baru",
+      'servers.add': "Tambah server",
+      'reviews.title': "Verifikasi saya",
+      'mod.download': "↓ Unduh",
+      'status.approved': "Terverifikasi",
+      'status.pending': "Menunggu verifikasi",
+      'status.rejected': "Ditolak",
+      'err.generic': "Terjadi kesalahan. Coba lagi.",
+      'notfound.title': "Halaman tidak ditemukan",
+      'notfound.link': "Ke beranda",
+    },
+    ja: {
+      'nav.home': "見つける",
+      'nav.modpacks': "モッドパック",
+      'nav.upload': "アップロード",
+      'nav.servers': "サーバー",
+      'nav.settings': "設定",
+      'auth.login': "ログイン",
+      'auth.register': "新規登録",
+      'auth.logout': "ログアウト",
+      'auth.username': "ユーザー名",
+      'auth.password': "パスワード",
+      'auth.submitLogin': "ログイン",
+      'home.h1a': "最高のMod。",
+      'home.h1b': "スムーズでシンプル。",
+      'home.sub': "Minecraft Modを見つけて、ダウンロードして、シェアしよう – すべてここに。",
+      'home.search': "Mod、作者、キーワードを検索…",
+      'home.sort.popular': "人気順",
+      'home.sort.new': "新着順",
+      'cat.all': "すべて",
+      'cat.adventure': "冒険",
+      'cat.cursed': "呪い",
+      'cat.decoration': "装飾",
+      'cat.economy': "経済",
+      'cat.equipment': "装備",
+      'cat.food': "食べ物",
+      'cat.game-mechanics': "ゲームメカニクス",
+      'cat.library': "ライブラリ",
+      'cat.magic': "魔法",
+      'cat.management': "管理",
+      'cat.minigame': "ミニゲーム",
+      'cat.mobs': "モブ",
+      'cat.optimization': "最適化",
+      'cat.social': "ソーシャル",
+      'cat.storage': "ストレージ",
+      'cat.technology': "テクノロジー",
+      'cat.transportation': "移動",
+      'cat.utility': "ユーティリティ",
+      'cat.world-generation': "ワールド生成",
+      'type.mod': "Mod",
+      'type.plugin': "プラグイン",
+      'type.resourcepack': "リソースパック",
+      'type.shader': "シェーダー",
+      'env.client': "クライアント",
+      'env.server': "サーバー",
+      'env.both': "クライアントとサーバー",
+      'upload.title': "Modをアップロード",
+      'upload.name': "名前",
+      'upload.category': "カテゴリ",
+      'upload.submit': "審査に提出",
+      'upload.type': "種類",
+      'settings.title': "設定",
+      'settings.theme': "見た目",
+      'settings.language': "言語",
+      'theme.aqua': "アクア",
+      'theme.ocean': "オーシャン",
+      'theme.mint': "ミント",
+      'theme.night': "ナイト",
+      'modpack.new': "新しいモッドパック",
+      'servers.add': "サーバーを追加",
+      'reviews.title': "自分の審査",
+      'mod.download': "↓ ダウンロード",
+      'status.approved': "検証済み",
+      'status.pending': "検証待ち",
+      'status.rejected': "却下",
+      'err.generic': "エラーが発生しました。もう一度お試しください。",
+      'notfound.title': "ページが見つかりません",
+      'notfound.link': "ホームへ",
+    },
+    pcm: {
+      'nav.home': "Find am",
+      'nav.modpacks': "Modpacks",
+      'nav.upload': "Upload",
+      'nav.servers': "Servers",
+      'nav.settings': "Settings",
+      'auth.login': "Log in",
+      'auth.register': "Sign up",
+      'auth.logout': "Log out",
+      'auth.username': "Username",
+      'auth.password': "Password",
+      'auth.submitLogin': "Log in",
+      'home.h1a': "Di best mods.",
+      'home.h1b': "Smooth and easy.",
+      'home.sub': "Find, download and share Minecraft mods – everything for one place.",
+      'home.search': "Search mods, authors or keywords…",
+      'home.sort.popular': "Di popular ones",
+      'home.sort.new': "Di new ones",
+      'cat.all': "All",
+      'cat.adventure': "Adventure",
+      'cat.cursed': "Cursed",
+      'cat.decoration': "Decoration",
+      'cat.economy': "Economy",
+      'cat.equipment': "Equipment",
+      'cat.food': "Food",
+      'cat.game-mechanics': "Game Mechanics",
+      'cat.library': "Library",
+      'cat.magic': "Magic",
+      'cat.management': "Management",
+      'cat.minigame': "Minigame",
+      'cat.mobs': "Mobs",
+      'cat.optimization': "Optimization",
+      'cat.social': "Social",
+      'cat.storage': "Storage",
+      'cat.technology': "Technology",
+      'cat.transportation': "Transportation",
+      'cat.utility': "Utility",
+      'cat.world-generation': "World Generation",
+      'type.mod': "Mod",
+      'type.plugin': "Plugin",
+      'type.resourcepack': "Resource pack",
+      'type.shader': "Shader",
+      'env.client': "Client",
+      'env.server': "Server",
+      'env.both': "Client & server",
+      'upload.title': "Upload mod",
+      'upload.name': "Name",
+      'upload.category': "Category",
+      'upload.submit': "Send for check",
+      'upload.type': "Type",
+      'settings.title': "Settings",
+      'settings.theme': "Look",
+      'settings.language': "Language",
+      'theme.aqua': "Aqua",
+      'theme.ocean': "Ocean",
+      'theme.mint': "Mint",
+      'theme.night': "Night",
+      'modpack.new': "New modpack",
+      'servers.add': "Add server",
+      'reviews.title': "My checks",
+      'mod.download': "↓ Download",
+      'status.approved': "Verified",
+      'status.pending': "Waiting for verification",
+      'status.rejected': "Rejected",
+      'err.generic': "Something no correct. Try again.",
+      'notfound.title': "Page no dey",
+      'notfound.link': "Go home",
+    },
+    mr: {
+      'nav.home': "शोधा",
+      'nav.modpacks': "मॉडपॅक",
+      'nav.upload': "अपलोड",
+      'nav.servers': "सर्व्हर",
+      'nav.settings': "सेटिंग्ज",
+      'auth.login': "लॉग इन",
+      'auth.register': "नोंदणी",
+      'auth.logout': "लॉग आउट",
+      'auth.username': "वापरकर्तानाव",
+      'auth.password': "पासवर्ड",
+      'auth.submitLogin': "लॉग इन करा",
+      'home.h1a': "सर्वोत्तम मॉड्स.",
+      'home.h1b': "सोपे आणि सहज.",
+      'home.sub': "Minecraft मॉड्स शोधा, डाउनलोड करा आणि शेअर करा – सर्व एकाच ठिकाणी.",
+      'home.search': "मॉड्स, लेखक किंवा कीवर्ड शोधा…",
+      'home.sort.popular': "लोकप्रिय",
+      'home.sort.new': "नवीन",
+      'cat.all': "सर्व",
+      'cat.adventure': "साहस",
+      'cat.cursed': "शापित",
+      'cat.decoration': "सजावट",
+      'cat.economy': "अर्थव्यवस्था",
+      'cat.equipment': "उपकरणे",
+      'cat.food': "अन्न",
+      'cat.game-mechanics': "गेम मेकॅनिक्स",
+      'cat.library': "लायब्ररी",
+      'cat.magic': "जादू",
+      'cat.management': "व्यवस्थापन",
+      'cat.minigame': "मिनीगेम",
+      'cat.mobs': "मॉब्स",
+      'cat.optimization': "ऑप्टिमायझेशन",
+      'cat.social': "सामाजिक",
+      'cat.storage': "स्टोरेज",
+      'cat.technology': "तंत्रज्ञान",
+      'cat.transportation': "वाहतूक",
+      'cat.utility': "युटिलिटी",
+      'cat.world-generation': "जग निर्मिती",
+      'type.mod': "मॉड",
+      'type.plugin': "प्लगइन",
+      'type.resourcepack': "रिसोर्स पॅक",
+      'type.shader': "शेडर",
+      'env.client': "क्लायंट",
+      'env.server': "सर्व्हर",
+      'env.both': "क्लायंट आणि सर्व्हर",
+      'upload.title': "मॉड अपलोड करा",
+      'upload.name': "नाव",
+      'upload.category': "वर्ग",
+      'upload.submit': "पडताळणीसाठी पाठवा",
+      'upload.type': "प्रकार",
+      'settings.title': "सेटिंग्ज",
+      'settings.theme': "रूप",
+      'settings.language': "भाषा",
+      'theme.aqua': "अ‍ॅक्वा",
+      'theme.ocean': "महासागर",
+      'theme.mint': "पुदिना",
+      'theme.night': "रात्र",
+      'modpack.new': "नवीन मॉडपॅक",
+      'servers.add': "सर्व्हर जोडा",
+      'reviews.title': "माझ्या पडताळण्या",
+      'mod.download': "↓ डाउनलोड",
+      'status.approved': "पडताळलेले",
+      'status.pending': "पडताळणीची प्रतीक्षा",
+      'status.rejected': "नाकारले",
+      'err.generic': "काहीतरी चुकले. पुन्हा प्रयत्न करा.",
+      'notfound.title': "पृष्ठ सापडले नाही",
+      'notfound.link': "मुख्यपृष्ठावर जा",
+    }
   };
 
   /* =====================================================
@@ -1676,19 +2727,21 @@
   function applySettings() {
     document.documentElement.dataset.theme = settings.theme;
     document.documentElement.lang = settings.lang;
+    document.documentElement.dir = (settings.lang === 'ar' || settings.lang === 'ur') ? 'rtl' : 'ltr';
   }
 
   function t(key, vars) {
     const dict = I18N[settings.lang] || I18N.de;
-    let s = dict[key] != null ? dict[key] : (I18N.de[key] != null ? I18N.de[key] : key);
+    let s = dict[key] != null ? dict[key] : (I18N.en[key] != null ? I18N.en[key] : key);
     if (vars) for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k]));
     return s;
   }
-  function locale() { return ({de:'de-DE',en:'en-US',fr:'fr-FR',es:'es-ES',pt:'pt-PT',pl:'pl-PL',tr:'tr-TR',nl:'nl-NL'})[settings.lang] || 'en-US'; }
+  function locale() { return ({'de': 'de-DE', 'en': 'en-US', 'zh': 'zh-CN', 'hi': 'hi-IN', 'es': 'es-ES', 'fr': 'fr-FR', 'ar': 'ar-SA', 'bn': 'bn-BD', 'pt': 'pt-BR', 'ru': 'ru-RU', 'ur': 'ur-PK', 'id': 'id-ID', 'ja': 'ja-JP', 'pcm': 'en-NG', 'mr': 'mr-IN', 'pl': 'pl-PL', 'tr': 'tr-TR', 'nl': 'nl-NL'})[settings.lang] || 'en-US'; }
 
   let users = [];
   let mods = [];
   let modpacks = [];
+  let servers = [];
   function saveUsers() {}
 
   function savePacks() {}
@@ -1735,7 +2788,8 @@
       status: r.status, rejectReason: r.reject_reason || '', downloads: r.downloads || 0,
       created: ts(r.created_at), hasFile: !!r.file_path, filePath: r.file_path || null,
       fileName: r.file_name || '', fileSize: r.file_size || 0,
-      sha256: r.sha256 || null, vt: r.vt || null, chat: []
+      sha256: r.sha256 || null, vt: r.vt || null, chat: [],
+      contentType: r.content_type || 'mod', environment: r.environment || 'both'
     };
   }
   function toRow(m, withId) {
@@ -1745,7 +2799,8 @@
       url: m.url || null, status: m.status, reject_reason: m.rejectReason || '',
       downloads: m.downloads || 0, file_path: m.filePath || null,
       file_name: m.fileName || null, file_size: m.fileSize || null,
-      sha256: m.sha256 || null, vt: m.vt || null
+      sha256: m.sha256 || null, vt: m.vt || null,
+      content_type: m.contentType || 'mod', environment: m.environment || 'both'
     };
     if (withId) row.id = m.id;
     return row;
@@ -1880,6 +2935,8 @@
       id: r.id, name: r.name, description: r.description || '', version: r.version, loader: r.loader,
       mods: r.mod_ids || [], author: (me() || {}).name || '', created: ts(r.created_at)
     }));
+    const sv = await sb.from('servers').select('*').order('created_at', { ascending: false });
+    servers = (sv.data || []).map(fromServer);
     snapshots.clear();
     mods.forEach(x => snapshots.set(x.id, JSON.stringify(toRow(x))));
   }
@@ -1963,6 +3020,8 @@
       case 'profile':
         if (!user) { needLogin('#/profile'); return; }
         view = viewProfile(user); break;
+      case 'servers':
+        view = viewServers(user); break;
       case 'settings':
         view = viewSettings(); break;
       case 'admin':
@@ -2003,7 +3062,7 @@
   /* =====================================================
      Startseite
      ===================================================== */
-  const filters = { q: '', cat: 'all', sort: 'popular' };
+  const filters = { q: '', cat: 'all', sort: 'popular', type: 'all', ver: 'all', env: 'all' };
 
   function viewHome() {
     const approved = mods.filter(m => statusOf(m) === 'approved');
@@ -2017,7 +3076,7 @@
           <h1>${esc(t('home.h1a'))}<span>${esc(t('home.h1b'))}</span></h1>
           <p>${esc(t('home.sub'))}</p>
           <div class="hero-actions">
-            <a class="btn" href="#discoverMods">⌕ &nbsp; ${esc(t('home.cta'))}</a>
+            <button class="btn" id="goDiscover">⌕ &nbsp; ${esc(t('home.cta'))}</button>
             <a class="btn ghost" href="#/upload">＋ &nbsp; ${esc(t('nav.upload'))}</a>
           </div>
           <div class="searchbar">
@@ -2034,6 +3093,11 @@
           <div class="featured-heading"><h2>${esc(t('home.featured'))}</h2><p>${esc(t('home.featuredSub'))}</p></div>
           <div class="mod-marquee"><div class="mod-marquee-track" id="modMarquee"></div></div>
         </section>
+        <div class="filterbar">
+          <div class="chips scroll-x">${['all', 'mod', 'plugin', 'resourcepack', 'shader'].map(ty => `<button class="chip tchip ${filters.type === ty ? 'on' : ''}" data-type="${ty}">${esc(ty === 'all' ? t('filter.allTypes') : t('type.' + ty))}</button>`).join('')}</div>
+          <select class="select" id="fver" aria-label="${esc(t('upload.version'))}"><option value="all">${esc(t('home.allVersions'))}</option>${opts(VERSIONS)}</select>
+          <select class="select" id="fenv" aria-label="${esc(t('filter.env'))}"><option value="all">${esc(t('filter.allEnv'))}</option><option value="client">${esc(t('env.client'))}</option><option value="server">${esc(t('env.server'))}</option><option value="both">${esc(t('env.both'))}</option></select>
+        </div>
         <div class="toolbar" id="discoverMods">
           <div class="chips scroll-x">${cats.map(c => `<button class="chip ${filters.cat === c ? 'on' : ''}" data-cat="${esc(c)}">${c !== 'all' && CAT_SVG[c] ? `<span class="cat-ico">${CAT_SVG[c]}</span>` : ''}${esc(t('cat.' + c))}</button>`).join('')}</div>
           <select class="select" id="sort" aria-label="${esc(t('home.sortLabel'))}">
@@ -2047,11 +3111,22 @@
         $('#q').addEventListener('input', e => { filters.q = e.target.value; drawGrid(); });
         $('#sort').value = filters.sort;
         $('#sort').addEventListener('change', e => { filters.sort = e.target.value; drawGrid(); });
-        document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('.chip[data-cat]').forEach(b => b.addEventListener('click', () => {
           filters.cat = b.dataset.cat;
-          document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === b));
+          document.querySelectorAll('.chip[data-cat]').forEach(x => x.classList.toggle('on', x === b));
           drawGrid();
         }));
+        $('#goDiscover').addEventListener('click', () => $('#discoverMods').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        document.querySelectorAll('.tchip').forEach(b => b.addEventListener('click', () => {
+          filters.type = b.dataset.type;
+          document.querySelectorAll('.tchip').forEach(x => x.classList.toggle('on', x === b));
+          drawGrid();
+        }));
+        $('#fver').value = filters.ver;
+        $('#fver').addEventListener('change', e => { filters.ver = e.target.value; drawGrid(); });
+        $('#fenv').value = filters.env;
+        $('#fenv').addEventListener('change', e => { filters.env = e.target.value; drawGrid(); });
+        wheelToHorizontal(document.querySelectorAll('.scroll-x'));
         drawMarquee();
         drawGrid();
       }
@@ -2078,6 +3153,9 @@
     let list = mods.filter(m =>
       statusOf(m) === 'approved' &&
       (filters.cat === 'all' || m.category === filters.cat) &&
+      (filters.type === 'all' || (m.contentType || 'mod') === filters.type) &&
+      (filters.ver === 'all' || m.version === filters.ver) &&
+      (filters.env === 'all' || m.environment === filters.env || (filters.env !== 'both' && m.environment === 'both')) &&
       (!q || [m.name, T(m, 'summary'), m.author, catLabel(m.category), m.loader].join(' ').toLowerCase().includes(q)));
     // Mehrere Versionen derselben Mod desselben Uploaders erscheinen als ein Eintrag.
     const grouped = new Map();
@@ -2343,6 +3421,8 @@
               <div class="row">
                 <div class="field"><label for="f_name">${esc(t('upload.name'))}</label><input id="f_name" maxlength="40" placeholder="${esc(t('upload.namePh'))}"></div>
                 <div class="field"><label for="f_cat">${esc(t('upload.category'))}</label><select id="f_cat">${opts(CATS, catLabel)}</select></div>
+                <div class="field"><label for="f_type">${esc(t('upload.type'))}</label><select id="f_type">${opts(['mod', 'plugin', 'resourcepack', 'shader'], ty => t('type.' + ty))}</select></div>
+                <div class="field"><label for="f_env">${esc(t('upload.env'))}</label><select id="f_env">${opts(['both', 'client', 'server'], e => t('env.' + e))}</select></div>
               </div>
               <div class="field"><label for="f_sum">${esc(t('upload.summary'))}</label><input id="f_sum" maxlength="120" placeholder="${esc(t('upload.summaryPh'))}"></div>
               <div class="row">
@@ -2357,7 +3437,7 @@
               </div>
               <div class="field">
                 <label for="f_file">${esc(t('upload.file'))}</label>
-                <input id="f_file" type="file" accept=".jar,application/java-archive">
+                <input id="f_file" type="file" accept=".jar,.zip">
                 <span class="hint">${esc(t('upload.fileHint'))}</span>
               </div>
               <p class="hint" style="margin:-4px 0 16px">${esc(t('upload.or'))}</p>
@@ -2366,6 +3446,7 @@
           </div>
         </div>`,
       bind() {
+        $('#f_type').addEventListener('change', () => { $('#f_loader').innerHTML = opts(loaderOptionsFor($('#f_type').value)); });
         $('#upForm').addEventListener('submit', async e => {
           e.preventDefault();
           const user = me();
@@ -2376,13 +3457,16 @@
           const description = $('#f_desc').value.trim();
           const url = $('#f_url').value.trim();
           const file = $('#f_file').files[0] || null;
+          const ctype = $('#f_type').value;
+          const cenv = $('#f_env').value;
 
           if (name.length < 3) return showError('formErr', t('upload.errName'));
           if (summary.length < 10) return showError('formErr', t('upload.errSummary'));
           if (!url && !file) return showError('formErr', t('upload.errSource'));
           if (url && !/^https:\/\/\S+$/i.test(url)) return showError('formErr', t('upload.errLink'));
           if (file) {
-            if (!/\.jar$/i.test(file.name)) return showError('formErr', t('upload.errType'));
+            const extOk = ctype === 'plugin' ? /\.jar$/i : (ctype === 'resourcepack' || ctype === 'shader') ? /\.zip$/i : /\.(jar|zip)$/i;
+            if (!extOk.test(file.name)) return showError('formErr', t('upload.errTypeFor', { types: ctype === 'plugin' ? '.jar' : (ctype === 'mod' ? '.jar, .zip' : '.zip') }));
             if (file.size > MAX_FILE) return showError('formErr', t('upload.errSize'));
             // Vor dem Schreiben prüfen, ob der Browser voraussichtlich genug IndexedDB-Speicher hat.
             if (navigator.storage && navigator.storage.estimate) {
@@ -2405,7 +3489,7 @@
             status: admin ? 'approved' : 'pending', rejectReason: '',
             hasFile: !!file, filePath: file ? id + '/' + safeFileName(file.name) : null,
             fileName: file ? file.name : '', fileSize: file ? file.size : 0,
-            sha256: sha, vt: null, chat: []
+            sha256: sha, vt: null, chat: [], contentType: ctype, environment: cenv
           };
           const { error: insErr } = await sb.from('mods').insert(toRow(mod, true));
           if (insErr) {
@@ -2497,7 +3581,7 @@
 
   function packItem(p) {
     const list = p.mods.map(findMod).filter(Boolean);
-    const mismatch = list.filter(m => m.version !== p.version || m.loader !== p.loader).length;
+    const mismatch = list.filter(m => (m.contentType || 'mod') !== 'plugin' && (m.version !== p.version || ((m.contentType || 'mod') === 'mod' && m.loader !== p.loader))).length;
     return `
       <div class="packitem">
         <div class="modhead" style="gap:12px">
@@ -2659,7 +3743,9 @@
     let skipped = 0;
     toast(t('modpack.building'));
 
+    let pluginsSkipped = 0;
     for (const m of picked) {
+      if ((m.contentType || 'mod') === 'plugin') { pluginsSkipped++; continue; }
       if (m.hasFile) {
         let blob = null;
         try { blob = await getFile(m.id); } catch (e) { blob = null; }
@@ -2667,7 +3753,7 @@
           let fname = safeFileName(m.fileName || (m.name + '.jar'));
           if (used.has(fname)) fname = m.id + '_' + fname;
           used.add(fname);
-          entries.push({ name: 'overrides/mods/' + fname, data: new Uint8Array(await blob.arrayBuffer()) });
+          entries.push({ name: folderFor(m) + fname, data: new Uint8Array(await blob.arrayBuffer()) });
           fileCount++;
           continue;
         }
@@ -2692,7 +3778,7 @@
     if (links.length) entries.push({ name: 'mods-links.txt', data: enc.encode(links.join('\n') + '\n') });
 
     triggerDownload(makeZip(entries), safeFileName(pack.name) + '.mrpack');
-    toast(t('modpack.done') + (skipped ? ' ' + t('modpack.skipped', { n: skipped }) : ''));
+    toast(t('modpack.done') + (skipped ? ' ' + t('modpack.skipped', { n: skipped }) : '') + (pluginsSkipped ? ' ' + t('modpack.pluginsSkipped', { n: pluginsSkipped }) : ''));
   }
 
   /* =====================================================
@@ -2780,7 +3866,7 @@
         <span class="swatch sw-${th}"></span>
         <b>${esc(t('theme.' + th))}</b>
       </button>`).join('');
-    const languageNames = { de: 'Deutsch', en: 'English', fr: 'Français', es: 'Español', pt: 'Português', pl: 'Polski', tr: 'Türkçe', nl: 'Nederlands' };
+    const languageNames = { de: 'Deutsch', en: 'English', zh: '中文（普通话）', hi: 'हिन्दी', es: 'Español', fr: 'Français', ar: 'العربية', bn: 'বাংলা', pt: 'Português', ru: 'Русский', ur: 'اردو', id: 'Bahasa Indonesia', ja: '日本語', pcm: 'Naijá (Pidgin)', mr: 'मराठी', pl: 'Polski', tr: 'Türkçe', nl: 'Nederlands' };
     const langs = LANGS.map(l => `
       <button class="chip ${settings.lang === l ? 'on' : ''}" data-action="set-lang" data-id="${l}" lang="${l}" aria-pressed="${settings.lang === l}">${languageNames[l]}</button>`).join('');
     return {
@@ -3395,6 +4481,119 @@
     };
   }
 
+  /* =====================================================
+     Inhalte & Server: Hilfsfunktionen, Ansichten, Admin
+     ===================================================== */
+  const PLUGIN_LOADERS = ['Paper', 'Spigot', 'Bukkit', 'Purpur'];
+  const SHADER_LOADERS = ['Iris', 'OptiFine'];
+  function loaderOptionsFor(type) {
+    if (type === 'plugin') return PLUGIN_LOADERS;
+    if (type === 'shader') return SHADER_LOADERS;
+    if (type === 'resourcepack') return ['Vanilla'];
+    return LOADERS;
+  }
+  function folderFor(m) {
+    const ty = m.contentType || 'mod';
+    if (ty === 'resourcepack') return 'overrides/resourcepacks/';
+    if (ty === 'shader') return 'overrides/shaderpacks/';
+    return 'overrides/mods/';
+  }
+  function wheelToHorizontal(els) {
+    els.forEach(el => el.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+        el.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false }));
+  }
+  function fromServer(r) {
+    return {
+      id: r.id, name: r.name, address: r.address, version: r.version, website: r.website || '',
+      description: r.description || '', ownerId: r.owner_id, owner: r.owner_name || '',
+      status: r.status, promoted: !!r.promoted, promoRequested: !!r.promo_requested, created: ts(r.created_at)
+    };
+  }
+  function serverCard(s) {
+    return `<div class="card srv-card">
+      <div class="modhead">
+        <div class="icon sm" style="background:${gradientFor(s.name)}">${initial(s.name)}</div>
+        <div style="flex:1;min-width:0"><div class="modname">${esc(s.name)} ${s.promoted ? `<span class="badge admin">${esc(t('servers.promoBadge'))}</span>` : ''}</div>
+          <div class="by">${esc(s.owner)} · MC ${esc(s.version)}</div></div>
+      </div>
+      <p class="summary">${esc(s.description)}</p>
+      <div class="btnrow" style="margin-top:0">
+        <code>${esc(s.address)}</code>
+        <button class="btn ghost small" data-action="srv-copy" data-id="${esc(s.id)}">${esc(t('servers.copy'))}</button>
+        ${s.website ? `<a class="btn ghost small" href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">↗</a>` : ''}
+      </div>
+    </div>`;
+  }
+  function viewServers(user) {
+    const approved = servers.filter(s => s.status === 'approved');
+    const promoted = approved.filter(s => s.promoted);
+    const rest = approved.filter(s => !s.promoted);
+    const mine = user ? servers.filter(s => sameName(s.owner, user.name)) : [];
+    const mineHtml = mine.map(s => `<div class="packitem">
+        <div class="modhead"><div style="flex:1;min-width:0"><div class="modname">${esc(s.name)}</div><div class="by"><code>${esc(s.address)}</code></div></div>${statusBadge(s)}</div>
+        ${s.status === 'approved' && !s.promoted && !s.promoRequested ? `<button class="btn ghost small" style="margin-top:10px" data-action="srv-promo" data-id="${esc(s.id)}">${esc(t('servers.promoAsk'))}</button>` : ''}
+        ${s.promoRequested && !s.promoted ? `<p class="hint" style="margin-top:8px">${esc(t('servers.promoSent'))}</p>` : ''}
+      </div>`).join('');
+    const form = user ? `<div class="card" style="margin-top:18px">
+        <h2 class="sub" style="margin-top:0">${esc(t('servers.add'))}</h2>
+        <div class="error" id="srvErr"></div>
+        <form id="srvForm" novalidate>
+          <div class="row">
+            <div class="field"><label for="s_name">${esc(t('servers.name'))}</label><input id="s_name" maxlength="40"></div>
+            <div class="field"><label for="s_addr">${esc(t('servers.address'))}</label><input id="s_addr" maxlength="100" placeholder="play.example.net"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="s_ver">${esc(t('servers.version'))}</label><select id="s_ver">${opts(VERSIONS)}</select></div>
+            <div class="field"><label for="s_web">${esc(t('servers.website'))}</label><input id="s_web" placeholder="https://…"></div>
+          </div>
+          <div class="field"><label for="s_desc">${esc(t('servers.desc'))}</label><textarea id="s_desc" maxlength="600"></textarea></div>
+          <button class="btn" type="submit" style="width:100%">${esc(t('servers.submit'))}</button>
+        </form>
+      </div>` : '';
+    return {
+      html: `
+        <h1 class="title small">${esc(t('servers.title'))}</h1>
+        <p class="muted" style="margin:4px 0 18px">${esc(t('servers.sub'))}</p>
+        ${promoted.length ? `<h2 class="sub">${esc(t('servers.promoted'))}</h2><div class="grid">${promoted.map(serverCard).join('')}</div>` : ''}
+        <h2 class="sub">${esc(t('servers.list'))}</h2>
+        <div class="grid">${rest.map(serverCard).join('') || `<div class="card empty" style="grid-column:1/-1">${esc(t('servers.empty'))}</div>`}</div>
+        ${user ? `<h2 class="sub">${esc(t('servers.mine'))}</h2>${mineHtml || `<p class="hint">${esc(t('servers.none'))}</p>`}${form}` : ''}`,
+      bind() {
+        const f = $('#srvForm');
+        if (!f) return;
+        f.addEventListener('submit', async e => {
+          e.preventDefault();
+          const name = $('#s_name').value.trim();
+          const address = $('#s_addr').value.trim();
+          const website = $('#s_web').value.trim();
+          const description = $('#s_desc').value.trim();
+          if (name.length < 3) return showError('srvErr', t('upload.errName'));
+          if (address.length < 3) return showError('srvErr', t('servers.errAddr'));
+          if (website && !/^https:\/\/\S+$/i.test(website)) return showError('srvErr', t('upload.errLink'));
+          const { error } = await sb.from('servers').insert({ name, address, version: $('#s_ver').value, website: website || null, description });
+          if (error) return showError('srvErr', error.message);
+          await loadAll();
+          toast(t('servers.submitted'));
+          render();
+        });
+      }
+    };
+  }
+  function srvAdminHtml() {
+    const pending = servers.filter(s => s.status === 'pending');
+    const requests = servers.filter(s => s.status === 'approved' && s.promoRequested && !s.promoted);
+    const promotedList = servers.filter(s => s.status === 'approved' && s.promoted);
+    const row = (s, buttons) => `<tr><td><b>${esc(s.name)}</b><div class="hint"><code>${esc(s.address)}</code> · MC ${esc(s.version)}</div></td><td>${esc(s.owner)}</td><td class="nowrap">${buttons}</td></tr>`;
+    const section = (title, rows) => `<div class="card tablewrap" style="margin-bottom:16px"><h3 class="sub" style="margin:8px 12px">${esc(title)}</h3>${rows ? `<table class="table"><tbody>${rows}</tbody></table>` : `<div class="empty">${esc(t('admin.srvEmpty'))}</div>`}</div>`;
+    return section(t('admin.srvPending'), pending.map(s => row(s, `<button class="btn small" data-action="srv-approve" data-id="${esc(s.id)}">${esc(t('mod.approve'))}</button> <button class="btn danger small" data-action="srv-reject" data-id="${esc(s.id)}">${esc(t('mod.reject'))}</button>`)).join(''))
+      + section(t('admin.srvRequests'), requests.map(s => row(s, `<button class="btn small" data-action="srv-promote" data-id="${esc(s.id)}">${esc(t('admin.srvPromote'))}</button>`)).join(''))
+      + section(t('admin.srvPromoted'), promotedList.map(s => row(s, `<button class="btn ghost small" data-action="srv-unpromote" data-id="${esc(s.id)}">${esc(t('admin.srvUnpromote'))}</button>`)).join(''));
+  }
+
   let adminTab = 'overview';
   const revealed = new Set(); // Namen (klein), deren Passwort sichtbar ist
 
@@ -3404,7 +4603,8 @@
       ['overview', t('admin.tabOverview')],
       ['review', `${t('admin.tabReview')}${pendingCount ? ' (' + pendingCount + ')' : ''}`],
       ['users', t('admin.tabUsers')],
-      ['mods', t('admin.tabMods')]
+      ['mods', t('admin.tabMods')],
+      ['servers', t('admin.tabServers')]
     ];
     const tabBar = `<div class="tabs">${tabs.map(([k, l]) =>
       `<button data-tab="${k}" class="${adminTab === k ? 'on' : ''}">${esc(l)}</button>`).join('')}</div>`;
@@ -3447,6 +4647,8 @@
             <tbody>${rows}</tbody></table>`
             : `<div class="empty">${esc(t('admin.reviewEmpty'))}</div>`}
         </div>`;
+    } else if (adminTab === 'servers') {
+      body = srvAdminHtml();
     } else if (adminTab === 'users') {
       const allShown = users.length > 0 && users.every(u => revealed.has(u.name.toLowerCase()));
       const rows = users.map(u => {
@@ -3510,7 +4712,7 @@
   /* =====================================================
      Klick-Aktionen (Delegation auf #app)
      ===================================================== */
-  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models', 'toggle-role'];
+  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models', 'toggle-role', 'srv-approve', 'srv-reject', 'srv-promote', 'srv-unpromote'];
 
   async function onAppClick(e) {
     const tabEl = e.target.closest('[data-tab]');
@@ -3580,6 +4782,32 @@
           break;
         }
 
+        case 'srv-copy': {
+          const srv = servers.find(x => x.id === id);
+          if (srv && navigator.clipboard) { await navigator.clipboard.writeText(srv.address); toast(t('servers.copy') + ' ✓'); }
+          return;
+        }
+        case 'srv-promo': {
+          const { error } = await sb.rpc('request_promotion', { srv: id });
+          if (error) { toast(error.message); return; }
+          await loadAll();
+          toast(t('servers.promoSent'));
+          break;
+        }
+        case 'srv-approve':
+        case 'srv-reject': {
+          const { error } = await sb.from('servers').update({ status: act === 'srv-approve' ? 'approved' : 'rejected' }).eq('id', id);
+          if (error) { toast(error.message); return; }
+          await loadAll();
+          break;
+        }
+        case 'srv-promote':
+        case 'srv-unpromote': {
+          const { error } = await sb.from('servers').update({ promoted: act === 'srv-promote', promo_requested: false }).eq('id', id);
+          if (error) { toast(error.message); return; }
+          await loadAll();
+          break;
+        }
         case 'inspect':
           await openInspector(id);
           return;
