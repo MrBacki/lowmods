@@ -5111,7 +5111,6 @@
     return {
       html: `
         <h1 class="title small">${esc(t('servers.title'))}</h1>
-        <p class="muted" style="margin:4px 0 18px">${esc(t('servers.sub'))}</p>
         <h2 class="sub">${esc(t('servers.list'))}</h2>
         <div class="grid">${approved.map(serverCard).join('') || `<div class="card empty" style="grid-column:1/-1">${esc(t('servers.empty'))}</div>`}</div>
         ${user ? `<h2 class="sub">${esc(t('servers.mine'))}</h2>${mineHtml || `<p class="hint">${esc(t('servers.none'))}</p>`}${form}` : ''}`,
@@ -5191,6 +5190,7 @@
       return `<div class="packitem">
         <div class="modhead"><div style="flex:1"><b>${esc(x.from)}</b> <span class="hint">${esc(new Date(x.at).toLocaleString(locale()))}</span><div class="hint">${where}</div></div></div>
         <p class="chat-text" style="margin-top:8px">${esc(x.body)}</p>
+        <button class="btn danger small" data-action="msg-del" data-id="${esc(x.id)}" style="margin-top:8px">${esc(t('servers.delete'))}</button>
       </div>`;
     }).join('');
   }
@@ -5374,7 +5374,7 @@
   /* =====================================================
      Klick-Aktionen (Delegation auf #app)
      ===================================================== */
-  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models', 'toggle-role', 'srv-approve', 'srv-reject', 'srv-promote', 'srv-unpromote'];
+  const ADMIN_ACTIONS = ['approve', 'reject', 'toggle-all', 'toggle-one', 'pw', 'del-user', 'inspect', 'check-save', 'check-models', 'toggle-role', 'srv-approve', 'srv-reject', 'srv-promote', 'srv-unpromote', 'msg-del'];
 
   async function onAppClick(e) {
     const tabEl = e.target.closest('[data-tab]');
@@ -5454,6 +5454,12 @@
           area.value = '';
           toast(t('servers.msgSent'));
           return;
+        }
+        case 'msg-del': {
+          const { error } = await sb.from('admin_messages').delete().eq('id', id);
+          if (error) { toast(error.message); return; }
+          adminMessages = adminMessages.filter(x => String(x.id) !== String(id));
+          break;
         }
         case 'srv-del': {
           if (!confirm(t('servers.confirmDelete'))) return;
